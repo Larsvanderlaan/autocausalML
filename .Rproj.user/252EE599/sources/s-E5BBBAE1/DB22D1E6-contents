@@ -1,0 +1,244 @@
+---
+title: "vignette"
+output:
+  pdf_document: default
+  html_document: default
+date: '2022-09-03'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+`causalsieve` allows for estimation of and inference for a rich class of target parameters in the single time-point treatment setting, specifically targer parameters that are linear in the outcome regression. Notable target parameters include the average treatment effect, the adjusted treatment-specific mean, the average treatment effect among the treated, the dose-response function, the effect of a shift-intervention, working models and marginal structural working models for the conditional average treatment effect.
+
+The package allows the users to specify a possibly very-large and data-adaptive linear regression model for the outcome regression function. Smaller linear regression models will lead to more precise estimates and inference at the cost of estimation bias due to model misspecification. Even when the user-supplied linear model is misspecified, the resulting estimates and inference are correct for target parameter evaluated at the best approximation of the true regression function within the misspecifed regression model. As a consequence, estimates and inference provided by this package are relatively robust to model misspecification, although the estimates need to be interpreted with care. 
+
+To characterize the uncertainty of parameter estimates, both confidence intervals based on the asymptotic-normality of the estimates and more robust bootstrap-based confidence intervals are provided.
+
+
+# The data-structure and target parameter
+
+This package considered the single time-point treatment data-structure `O = (X, A, Y) \sim P` where `X` is a vector of baseline variables, `A` is a discrete or continuous treatment assignment, `Y` is a numeric outcome. Denote the outcome regression function $g(A,X) := E_P[Y \mid A, X]$ and suppose $g$ falls in a linear regression model $\Gamma$. 
+
+This package can be used to estimate any target parameter $\theta(P)$ that is linear in the outcome regression function $g(A,X) := E[Y | A, X]$. That is, we consider target parameters that can be decomposed as
+$$\theta(P) \equiv \theta(P_{X,A}, g) \text{ where } \theta(P_{X,A}, ag' + bg) = a\theta(P_{X,A}, g') + b\theta(P_{X,A}, g).$$
+
+A subclass of parameters that fall under the above umbrella are as of the form
+$$\theta(P) = E_P\left[ m_{P_{X,A}}(X,A,g) \right].$$
+where $g \mapsto m_{P_{X,A}}(X,A,g)$ be is a linear function-valued mapping. For instance if $A \in \{0,1\}$, possible choices for $ m_{P_{X,A}}$ are $ m(X,A,g) = g(1,X) - g(0,X)$, $m(X,A,g) = g(1,X)$, and $ m_{P_{X,A}}(X,A,g) = A/mean(A) * (g(1,X) - g(0,X))$. 
+
+We will see in this vignette that such target parameters can be specified by supplying a formula expression for $ m_{P_{X,A}}(X,A,g)$. This class of parameters includes multiple well-known parameters including the average treatment effect $E_P[g(1,X) - g(0,X)]$, treatment-specific mean $E_P[g(A=a,X)]$ and the average treatment-effect among the treated $E_P[A / mean(A) * (g(1,X) - g(0,X))].
+
+The above class of parameters capture marginal(ized) treatment-effects. In practice, it may be of interest to learn conditional or subject-specific treatment effects. We can generalize the above class of parameters to handle many such cases including conditional average treatment effect working-models and marginal structural working models. Let $V$ be a subset of baseline variables $X$. Let $\underline{f}(V)$ be a transformation $V$. As an example, we may have $X = (X_1, X_2, X_3)$, $V = (X_1, X_2)$ and $\underline{f}(V) = c(exp(X_1), X_2^2)$. Consider the conditional target parameter
+$$E_P[m_{P_{X,A}}(X,A,g)\mid V].$$
+In order to estimate and obtain inference for this parameter, we need to specify a parametric form for $V \mapsto E_P[m_{P_{X,A}}(X,A,g)\mid V]$. Rather than assume this parametric form is correct, we instead use it as a marginal structural working model and estimate the best approximation of the true conditional target parameter within the working model. Formally, this package provides estimates and inference for marginal structural coefficient parameter of the form
+$$\beta_P = \text{argmin}_{\beta} \,E_P \left\{ m_{P_{X,A}}(X,A, g) - \beta^T \underline{f}(V)\right\}^2,$$
+which can equivalently be written as
+$$\beta_P = \text{argmin}_{\beta} \,E_P \left\{ E_P[m_{P_{X,A}}(X,A, g) \mid V] - \beta^T \underline{f}(V)\right\}^2.$$
+In other words, $\beta_P$ are the coefficients of the linear regression of $m_{P_{X,A}}(X,A, g)$ onto the transformed variables $\underline{f}(V)$. We can conveniently specify the parameter in a formulaic manner as
+$$m_{P_{X,A}}(X,A,g) \sim \text{formula}$$
+where `formula` is a formula expression that utilizes the baseline variables $X$. One notable specification is the intercept model for the CATE
+$$g(1,X) - g(0,X) \sim 1,$$
+which provides nonparametric estimates of the ATE $E_P[g(1,X) - g(0,X)]$. More generally, intercept models will recover the first class of estimands we considered. More generally we can consider
+$$g(1,X) - g(0,X) \sim 1 + X_1$$
+which models the CATE as linear in the first baseline variable $X_1$ and is also equivalent to the marginal structural working model $E[g(1,X) - g(0,X) \mid X_1] \sim 1 + X_1$. 
+
+Let us now see how to use causalsieve in practice. 
+
+ 
+ 
+# Using causalsieve
+
+Let us generate a dataset consisting of baseline variable `X`, a binary treatment `A`, and a continuous outcome `Y`.
+```{r}
+library(autocausalML)
+n <- 250
+d <- 3
+X <- replicate(d, runif(n, -1 , 1))
+A <- rbinom(n, 1, plogis(rowMeans(X)))
+Y <- rnorm(n, rowMeans(X) + A + A*X[,1])
+```
+
+To begin estimating treatment-effects using this package, we need to create a causalsieve object, which is an R6 class. The causalsieve object has four required arguments:
+
+\begin{itemize}
+  \item `X`: A matrix with the ith row and jth column being the observed value of the jth baseline variable for the ith observation.
+  \item `A`: A numeric vector with the observed values of a binary, numerically-encoded categorical, or continuous treatment variable.
+  \item `Y`: A numeric vector with the observed outcome values.
+  \item `g\_basis\_generator`: A function containing named arguments `X` and `A` that outputs a (n x k) matrix contained the evaluation of k basis functions for a linear-model/sieve for the outcome regression function `g(A,X) := E[Y | A, X]`  evaluated at `X` and `A`.
+\end{itemize}
+
+The package comes with built-in functions that output a data-adaptively chosen `g\_basis\_generator` function using either LASSO (glmnet) or Highly Adaptive Lasso (HAL). The function `make\_g_basis\_generator_LASSO` takes in the arguments `X`, `A` and `Y` and a formula object that specifies a linear regression model for the outcome regression function `g(A,X)`. LASSO is used to screen out unimportant variables, which is useful when `X` is high-dimensional. The function `make\_g\_basis\_generator_HAL` takes in the arguments `X`, `A` and `Y` as well as arguments to be passed to the `fit_hal` functions of the `hal9001` R package. `make\_g\_basis\_generator\_HAL` can be viewed as a nonparametric highly flexible version of `make\_g\_basis\_generator\_LASSO` where a high dimensional linear-model is generated for the outcome regression from the linear span of spline basis functions. A sparse set of spline basis functions is selected using the multivariate total variation penalty (which is equivalent in optimization to using the LASSO penalty).
+
+
+Lets model the outcome regression as linear in the baseline variables and include all baseline variable - treatment interactions.
+```{r}
+
+g_basis_gen_LASSO <- make_g_basis_generator_LASSO(X,A,Y, formula = ~. + A*.)
+
+
+as.data.frame(head(g_basis_gen_LASSO(X,A)))
+```
+
+
+We can use a more flexible regression model with HAL. Let's model the outcome regression as the sum of an additive function in the baseline variables and bi-additive in the interaction between treatment and the baseline-variable. This model can be specified using the `formula_hal` argument with `formula_hal = ~ h(.) + h(., A)`. We specify first-order (linear) splines by add the argument `s = 1` to formula_hal as `formula_hal = ~ h(., s=1) + h(., A,s=1)`. To generate the main-term basis functions from 10 knot points and the two-way treatment interaction basis functions from 5 knot points, we can add the `k` argument to formula_hal as `formula_hal = ~ h(., s=1, k= 10) + h(., A, s=1, k= 5)`. Alternatively, we can pass the arguments `smoothness_orders = 1` and `num_knots = c(10,5)` directly to `make_g_basis_generator_HAL`. If you do not want to screen the spline basis functions using HAL then you can set `screen_basis = FALSE` (note overly correlated basis functions are still removed).
+
+```{r}
+
+ 
+
+g_basis_gen_HAL <- make_g_basis_generator_HAL(X,A,Y, formula_hal = ~ h(., s=1, k= 10) + h(., A, s=1, k= 5), screen_basis = TRUE)
+as.data.frame(head(g_basis_gen_HAL(X,A)))
+
+g_basis_gen_HAL <- make_g_basis_generator_HAL(X,A,Y, formula_hal = ~ h(., s=1, k= 10) + h(., A, s=1, k= 5), screen_basis = FALSE)
+as.data.frame(head(g_basis_gen_HAL(X,A)))
+```
+
+
+
+We are finally ready to run some causal analysis using the causalsieve package.
+
+```{r}
+# Make g_basis_generator using LASSO
+g_basis_gen_LASSO <- make_g_basis_generator_LASSO(X,A,Y, formula = ~. + A*.)
+# Initialize causalsieve object
+causal_sieve <- causalsieve$new(X, A, Y, g_basis_gen_LASSO)
+
+
+```
+
+Once we have created a causalsieve object, we need to tell it what parameters/estimands we would like to learn and obtain inference for. This is done using the `add_target_parameter` function. To specify the target parameter we would like to add, `add_target_parameter` requires only one key argument
+
+\begin{itemize}
+  \item `formula`: a formula object of the form $m(X,A,g) \sim \text{<expression in X}>]$ specifying a linear regression of a conditional target parameter onto a working parametric model.
+\end{itemize}
+
+
+Let what formulas we should specify for a number of popular target parameters:
+
+\begin{enumerate}
+\item ATE: $E_P[g(A=1,X=X) - g(A=0,X=X)$ do $formula = g(A=1,X=X) - g(A=0,X=X) \sim 1$.
+\item Treatment-specific mean: $E_P[g(A=a, X=X)]$ do $formula = g(A=a,X=X) \sim 1$.
+\item ATT: $E_P[(A / P(A=1))*\{g(A=1, X=X) - g(A=0,X=X)\}]$ do $formula = (A / mean(A)) * (g(A=1, X=X) - g(A=0,X=X)) \sim 1$
+\item Working model for CATE: $g(A=1,X=X) - g(A=0,X=X)$ do $formula = g(A=1,X=X) - g(A=0,X=X) \sim 1 + X_1 + X_2$.
+\item Working model for CATT: $g(A=1,X=X) - g(A=0,X=X)$ do $formula =  (A / mean(A)) * (g(A=1, X=X) - g(A=0,X=X))  \sim 1 + X_1 + X_2$.
+\item Shift-intervention: Let $\delta \in \mathbb{R}$, $E_P[g(A + delta, X)]$ do $formula = g(A+delta, X) \sim 1$
+\item  
+\end{enumerate}
+
+
+Let us add the ATE, ATT and TSM target parameters.
+```{r}
+# ATE
+causal_sieve$add_target_parameter(
+  formula = g(A=1, X) - g(A=0, X) ~ 1, name = "ATE"
+)
+
+# ATT
+causal_sieve$add_target_parameter(
+  formula = A / mean(A) * (g(A=1, X) - g(A=0, X)) ~ 1, name = "ATT"
+)
+
+# TSM 
+causal_sieve$add_target_parameter(
+  formula =  g(A=1, X)   ~ 1, name = "TSM_A1"
+)
+causal_sieve$add_target_parameter(
+  formula =  g(A=0, X)   ~ 1 , name = "TSM_A0"
+)
+
+```
+
+We can see what parameters have been added by taking a look at the `target_parameters` attribute of our `causalsieve` object. `target_parameters` is a list that contains for each target parameter information that is required for estimation.
+
+```{r}
+names(causal_sieve$target_parameters)
+```
+
+Once we have added all our target parameters, we can obtain estimates and inference using the `estimate` function. The `estimates` attribute of the causalsieve object will contain parameter estimates, standard errors, confidence intervals among other relevant information. The `summarize` function can be used to provide a more user friendly summary of the parameter estimates.
+
+```{r}
+causal_sieve$estimate()
+estimates <- causal_sieve$estimates
+
+# parameter estimate
+estimates$ATE$estimate
+# parameter confidence interval using asymptotic analysis
+estimates$ATE$CI
+# parameter confidence interval using bootstrap
+estimates$ATE$CI_boot
+
+```
+
+```{r}
+# Summary
+causal_sieve$summary(ndigits = 3)
+```
+
+
+# More target parameters
+## Binary treatment effects
+
+```{r}
+n <- 250
+d <- 3
+X <- replicate(d, runif(n, -1 , 1))
+colnames(X) <- paste0("X", 1:d)
+A <- rbinom(n, 1, plogis(rowMeans(X)))
+Y <- rnorm(n, rowMeans(X) + A + A*X[,1])
+
+
+# Make g_basis_generator using LASSO
+g_basis_gen_LASSO <- make_g_basis_generator_LASSO(X,A,Y, formula = ~. + A*.)
+# Initialize causalsieve object
+causal_sieve <- causalsieve$new(X, A, Y, g_basis_gen_LASSO)
+
+# ATE
+causal_sieve$add_target_parameter(g(A=1,X=X) - g(A=0,X=X) ~ 1, name = "ATE")
+# CATE working model
+causal_sieve$add_target_parameter(g(A=1,X) - g(A=0,X) ~ 1 + X1, name = "CATE~1+X1")
+# CATE additive working model
+causal_sieve$add_target_parameter(g(A=1,X) - g(A=0,X) ~ ., name = "CATE~.")
+
+causal_sieve$estimate()
+causal_sieve$summary()
+```
+## Continuous treatment effects
+
+
+```{r}
+n <- 250
+d <- 3
+X <- replicate(d, runif(n, -1 , 1))
+colnames(X) <- paste0("X", 1:d)
+A <- rnorm(n, rowMeans(X), 0.5)
+A <- A - min(A)
+Y <- rnorm(n, rowMeans(X) + A + A*X[,1])
+
+
+# Make g_basis_generator using LASSO
+g_basis_gen_LASSO <- make_g_basis_generator_LASSO(X,A,Y, formula = ~. + A*.)
+# Initialize causalsieve object
+causal_sieve <- causalsieve$new(X, A, Y, g_basis_gen_LASSO)
+ 
+# dose-response at A=0.5
+causal_sieve$add_target_parameter(g(A=0, X) ~ 1)
+causal_sieve$add_target_parameter(g(A=0.5, X) ~ 1)
+# CATE dose-response + conditional working model
+causal_sieve$add_target_parameter(g(A=0.5, X) - g(A=0,X) ~ 1)
+causal_sieve$add_target_parameter(g(A=0.5, X) - g(A=0,X) ~ 1 + X1)
+
+ 
+
+# stochastic shift intervention (Nima Hejazi, Mark van der Laan et al. (2020))
+# https://arxiv.org/abs/2003.13771
+causal_sieve$add_target_parameter(g(A = A + 0, X)~ 1)
+causal_sieve$add_target_parameter(g(A = A + 0.5, X)~ 1)
+causal_sieve$add_target_parameter(g(A = A + 1, X)~ 1)
+
+causal_sieve$estimate()
+causal_sieve$summary()
+```
+
+
