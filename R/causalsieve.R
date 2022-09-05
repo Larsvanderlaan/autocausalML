@@ -2,7 +2,7 @@
 
 
 
-#' @import
+#' @export
 causalsieve <- R6::R6Class(
   classname = "causalsieve",
   portable = TRUE, class = TRUE,
@@ -106,14 +106,14 @@ causalsieve <- R6::R6Class(
       private$.target_parameters[[name_key]] <- parameter_specification
       # return(self$add_target_parameter_custom(theta_functional = theta_functional_msm, m_functional = m_functional_msm, name = name, bootstrap_se = bootstrap_se   ) )
 
-      return()
+      return(invisible())
 
     },
     add_target_parameter_custom = function(theta_functional = NULL,  m_functional = NULL, name = NULL  ) {
       name_key <- paste0(name_key, collapse = "_")
       parameter_specification <- list(name = name, theta_functional = theta_functional, m_functional = m_functional)
       private$.target_parameters[[name_key]] <- parameter_specification
-      return()
+      return(invisible())
     },
     estimate = function(bootstrap_se = TRUE  ) {
       target_parameters <- self$target_parameters
@@ -326,7 +326,7 @@ causalsieve <- R6::R6Class(
   )
 )
 
-#' @import
+#' @export
 make_g_basis_generator_HAL <- function(X, A, Y, max_degree = 2, smoothness_orders = 1, num_knots =  c(30,10), formula_hal = NULL, screen_basis = TRUE, lambda= NULL, fit_control = list() ,...) {
   V <- as.matrix(cbind(X,A))
   library(hal9001)
@@ -353,7 +353,7 @@ make_g_basis_generator_HAL <- function(X, A, Y, max_degree = 2, smoothness_order
 }
 
 
-#' @import
+#' @export
 make_g_basis_generator_LASSO <- function(X, A, Y, formula = ~., use_lambda_min = TRUE, ...) {
 
   V <- model.matrix(formula, as.data.frame(cbind(X,A)))
