@@ -1,0 +1,58 @@
+---
+title: "Sims"
+output: html_document
+date: '2022-09-05'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+run_sims(2,250,100)
+
+
+```
+  
+
+```{r}
+ library(autocausalML)
+ library(data.table)
+
+ run_sims <- function(const, n, nsims) {
+         out_list <- list()
+  out <- lapply(1:nsims, function(iter) {
+    print(iter)
+             datam_list <- get_data_generator_linear(const)(n)
+
+     X <- datam_list$X
+    A <- datam_list$A
+    Y <- datam_list$Y
+    g_basis_gen <- make_g_basis_generator_LASSO(X,A,Y, formula = ~. + A*.)
+    causal_sieve <- causalsieve$new(X, A, Y, g_basis_gen, nboots = 1500)
+    causal_sieve$add_target_parameter(g(A=1,X=X) - g(A=0,X=X) ~ 1, name = "ATE")
+    causal_sieve$add_target_parameter(g(A=1,X=X) - g(A=0,X=X) ~ 1 + W1)
+    causal_sieve$estimate()
+    causal_sieve$summary()
+    name <- unlist(sapply(causal_sieve$estimates, `[[`, "name"))
+
+    estimates <- unlist(sapply(causal_sieve$estimates, `[[`, "estimate"))
+    CI_IF <- do.call(rbind, lapply(causal_sieve$estimates, `[[`, "CI"))
+    CI_boot <- do.call(rbind, lapply(causal_sieve$estimates, `[[`, "CI_boot"))
+    out <- cbind(iter, name, estimates, CI_IF, CI_boot)
+    colnames(out) <- c("iter", "name", "estimate", "CI_left", "CI_right", "CI_boot_left", "CI_boot_right")
+    out_list[[iter]] <<- out
+    out_full <- as.data.table(do.call(rbind, out_list))
+    print(out_full[,mean(1 >= CI_left & 1 <= CI_right), by = "name"][[2]])
+    print(    out_full[,mean(1 >= CI_boot_left & 1 <= CI_boot_right), by = "name"][[2]]
+)
+    
+    return(out)
+  })
+  
+  out <- as.data.frame(do.call(rbind, out_list))
+  return(out)
+  
+} 
+
+```
