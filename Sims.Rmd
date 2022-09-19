@@ -8,51 +8,321 @@ date: '2022-09-05'
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
-run_sims(2,250,100)
+```{r, include = F, echo = F}
+library(sl3)
+out_list <- list()
+outs <- lapply(c(  1, 4, 7), function(const) {
+  out_list[[as.character(const)]] <<-  list()
+  lapply(rev(c(  50, 100, 150, 200,  300 , 500)) ,function(n) {
+ 
+  out <- run_sims(const,n,500,  formula_hal = ~ h(.) + h(.,A), num_knots = c(1,1), screen_basis = TRUE, gen_fun = get_data_generator_linear_smallsample, lrnr_pi = Lrnr_glmnet$new(), lrnr_g =Lrnr_glmnet$new(), nboots=3000)
+  
+  out_list[[as.character(const)]][[as.character(n)]] <<- out
+  out2 <- rbindlist(unlist(out_list, recursive = F))
+fwrite(out2, file = "SimpleParametricHALSmallSamples3.csv")
+return(out)
 
+  })
+   
+})
+ 
 
 ```
-  
 
 ```{r}
- library(autocausalML)
+ 
  library(data.table)
+ 
 
- run_sims <- function(const, n, nsims) {
+ run_sims <- function(const, n, nsims,  formula_hal = ~ h(.) + h(.,A), num_knots = c(1,1), screen_basis = F, gen_fun, lrnr_pi = Lrnr_glmnet$new(), lrnr_g = Lrnr_glmnet$new(formula = ~ . + A * .),nboots = 500) {
+    
          out_list <- list()
   out <- lapply(1:nsims, function(iter) {
+    try({
+    print("Current settings:")
+    print(n)
+    print(const)
     print(iter)
-             datam_list <- get_data_generator_linear(const)(n)
+             datam_list <- gen_fun(const)(n)
 
      X <- datam_list$X
     A <- datam_list$A
     Y <- datam_list$Y
-    g_basis_gen <- make_g_basis_generator_LASSO(X,A,Y, formula = ~. + A*.)
-    causal_sieve <- causalsieve$new(X, A, Y, g_basis_gen, nboots = 1500)
+    
+    g_basis_gen <-make_g_basis_generator_HAL(X,A,Y, formula_hal =formula_hal, smoothness_orders=1, num_knots = num_knots, max_degree = 2, screen_basis = screen_basis)
+    # datam_list_oracle <- gen_fun(const)(n=5000)
+    # g_basis_oracle <- g_basis_gen(X=datam_list_oracle$X, A=datam_list_oracle$A)
+    # print(dim(g_basis_oracle))
+    # beta <- coef(glm.fit(g_basis_oracle, datam_list_oracle$Y, family = gaussian()))
+    # ATE <- mean((g_basis_gen(X=datam_list_oracle$X, A= 1)-g_basis_gen(X=datam_list_oracle$X, A= 0) ) %*%beta)
+    ATE <- datam_list$ATE
+    
+    causal_sieve <- causalsieve$new(X, A, Y, g_basis_gen, nboots = nboots)
     causal_sieve$add_target_parameter(g(A=1,X=X) - g(A=0,X=X) ~ 1, name = "ATE")
-    causal_sieve$add_target_parameter(g(A=1,X=X) - g(A=0,X=X) ~ 1 + W1)
+   # causal_sieve$add_target_parameter(g(A=1,X=X) - g(A=0,X=X) ~ 1 + W1)
     causal_sieve$estimate()
-    causal_sieve$summary()
+    #\causal_sieve$summary()
     name <- unlist(sapply(causal_sieve$estimates, `[[`, "name"))
 
     estimates <- unlist(sapply(causal_sieve$estimates, `[[`, "estimate"))
+    CI_IF_df <- do.call(rbind, lapply(causal_sieve$estimates, `[[`, "CI"))
+    causal_sieve$confint(include_se_df_correction = FALSE)
     CI_IF <- do.call(rbind, lapply(causal_sieve$estimates, `[[`, "CI"))
     CI_boot <- do.call(rbind, lapply(causal_sieve$estimates, `[[`, "CI_boot"))
-    out <- cbind(iter, name, estimates, CI_IF, CI_boot)
-    colnames(out) <- c("iter", "name", "estimate", "CI_left", "CI_right", "CI_boot_left", "CI_boot_right")
+    out <- cbind(t(as.data.table(c(iter, name))), t(as.data.table(as.numeric(c(estimates, CI_IF, CI_IF_df, CI_boot)))))
+ print(t(as.data.table(as.numeric(c(estimates, CI_IF, CI_IF_df, CI_boot)))))
+ 
+    colnames(out) <- c("iter", "name", "estimate", "CI_left", "CI_right", "CI_df_left", "CI_df_right", "CI_boot_left", "CI_boot_right")
+    #
+ 
+    data <- as.data.frame(cbind(X,A,Y))
+    g_ests <- compute_g(data, lrnr_g = lrnr_g)
+    g1 <- g_ests$g1
+    g0 <- g_ests$g0
+    pi <-compute_pi(as.data.frame(cbind(X,A,Y)), lrnr_pi = lrnr_pi)
+    tmle <- compute_TMLE (data, pi, g1, g0,level = 0.05)
+    aipw <- compute_AIPW (data, pi, g1, g0,level = 0.05)
+    lm <- compute_glm (data,level = 0.05)
+    
+    comp <- as.numeric(unlist(c(tmle[-2], aipw[-2], lm[-2])))
+    names(comp) <- c(paste0(c("estimate", "CI_left", "CI_right"), "_tmle"),
+                     paste0(c("estimate", "CI_left", "CI_right"), "_aipw"),
+                     paste0(c("estimate", "CI_left", "CI_right"), "_lm"))
+    # 
+    out <- cbind(out, t(as.data.table(comp)))
+    colnames(out) <- c(
+      c("iter", "name", "estimate", "CI_left", "CI_right", "CI_df_left", "CI_df_right", "CI_boot_left", "CI_boot_right"), 
+       c(paste0(c("estimate", "CI_left", "CI_right"), "_tmle"),
+                     paste0(c("estimate", "CI_left", "CI_right"), "_aipw"),
+                     paste0(c("estimate", "CI_left", "CI_right"), "_lm"))
+    )
     out_list[[iter]] <<- out
     out_full <- as.data.table(do.call(rbind, out_list))
-    print(out_full[,mean(1 >= CI_left & 1 <= CI_right), by = "name"][[2]])
-    print(    out_full[,mean(1 >= CI_boot_left & 1 <= CI_boot_right), by = "name"][[2]]
+   
+   print("sieve IF")
+   
+    print(out_full[,mean(ATE >= CI_left & ATE <= CI_right), by = "name"][[2]])
+     print(out_full[, mean(as.numeric(CI_right) - as.numeric(CI_left))])
+     print("sieve IF - df adjusted")
+        print(out_full[,mean(ATE >= CI_df_left & ATE <= CI_df_right), by = "name"][[2]])
+         print(out_full[, mean(as.numeric(CI_df_right) - as.numeric(CI_df_left))])
+ print("sieve IF - boot")
+    print(    out_full[,mean(ATE >= CI_boot_left & ATE <= CI_boot_right), by = "name"][[2]])
+   print(out_full[, mean(as.numeric(CI_boot_right) - as.numeric(CI_boot_left))])
+
+ 
+    print("tmle")
+    print(    out_full[,mean(ATE >= CI_left_tmle & ATE <= CI_right_tmle), by = "name"][[2]]
 )
+     print(out_full[, mean(as.numeric(CI_right_tmle) - as.numeric(CI_left_tmle))])
+     print("lm")
+    print(    out_full[,mean(ATE >= CI_left_lm & ATE <= CI_right_lm), by = "name"][[2]]
+)
+     print(out_full[, mean(as.numeric(CI_right_lm) - as.numeric(CI_left_lm))])
     
     return(out)
+    })
   })
   
   out <- as.data.frame(do.call(rbind, out_list))
+  out$const <- const
+  out$n <- n
   return(out)
   
 } 
 
 ```
+
+
+
+
+```{r, include = F, echo = F}
+library(sl3)
+library(sl3)
+out_list <- list()
+outs <- lapply(c(  3,5, 8), function(const) {
+  out_list[[as.character(const)]] <<-  list()
+  lapply(rev(c(   250, 500, 1000  )) ,function(n) {
+ 
+   out <- run_sims(const,n,1000,  formula_hal = ~ h(.) + h(.,A), num_knots = c(1,1), screen_basis = TRUE, gen_fun = get_data_generator_linear_lasso, lrnr_pi = Lrnr_glmnet$new(), lrnr_g = Lrnr_hal9001$new(formula = ~h(.)  , smoothness_orders = 1, max_degree =1, num_knots = c(1)))
+   
+   out_list[[as.character(const)]][[as.character(n)]] <<- out
+  out2 <- rbindlist(unlist(out_list, recursive = F))
+fwrite(out2, file = "LassoHighDim.csv")
+return(out)
+
+  })
+   
+})
+outs <- rbindlist(unlist(outs, recursive = F))
+fwrite(outs, file = "LassoHighDim.csv")
+
+```
+
+```{r, include = F, echo = F}
+library(sl3)
+out_list <- list()
+outs <- lapply(c( 3,1), function(const) {
+  out_list[[as.character(const)]] <<-  list()
+  lapply(rev(c(   500, 1000,  2500 ,5000 )) ,function(n) {
+ if(n == 5000){
+   nknots <- 100
+ } else if(n == 2500){
+   nknots <- 50
+ } else if(n == 1000){
+   nknots <- 30
+ } else if(n == 500){
+   nknots <- 15
+ }
+ 
+  out <- run_sims(const,n,200,  formula_hal = ~ h(.) + h(.,A), num_knots = c(nknots,nknots), screen_basis = TRUE, gen_fun = get_data_generator_nonlinear, lrnr_pi = Lrnr_gam$new(), lrnr_g = Lrnr_hal9001$new(formula = ~h(.)  , smoothness_orders = 1, max_degree =2, num_knots = c(nknots)), nboots=2)
+  
+  out_list[[as.character(const)]][[as.character(n)]] <<- out
+  out2 <- rbindlist(unlist(out_list, recursive = F))
+fwrite(out2, file = "ComplexParametricHAL4_31.csv")
+return(NULL)
+
+  })
+   
+})
+ 
+
+```
+
+
+
+```{r, include = F, echo = F}
+library(sl3)
+out_list <- list()
+outs <- lapply(c(  3,5, 8), function(const) {
+  out_list[[as.character(const)]] <<-  list()
+  lapply(rev(c(   500, 1000,  2500 ,5000 )) ,function(n) {
+ 
+  out <- run_sims(const,n,1000,  formula_hal = ~ h(.) + h(.,A), num_knots = c(20,20), screen_basis = TRUE, gen_fun = get_data_generator_linear, lrnr_pi = Lrnr_gam$new(), lrnr_g = Lrnr_hal9001$new(formula = ~h(.)  , smoothness_orders = 1, max_degree =2, num_knots = c(20)), nboots=500)
+  
+  out_list[[as.character(const)]][[as.character(n)]] <<- out
+  out2 <- rbindlist(unlist(out_list, recursive = F))
+fwrite(out2, file = "SimpleParametricHAL2.csv")
+return(out)
+
+  })
+   
+})
+ 
+
+```
+
+
+
+
+```{r}
+ATE <- 1.811417
+#ATE <- 1
+library(data.table)
+outs <- fread("ComplexParametricHAL3.csv")
+#outs <- fread("SimpleParametricHAL2.csv")
+#outs <- fread("LassoHighDim.csv")
+outs$const[outs$const == 3] <- "overlap: 1e-06"
+outs$const[outs$const == 5] <- "overlap: 1e-10"
+outs$const[outs$const == 8] <- "overlap: 1e-15"
+
+outs$const[outs$const == 3] <- "overlap: 1e-05"
+outs$const[outs$const == 5] <- "overlap: 1e-08"
+outs$const[outs$const == 8] <- "overlap: 1e-15"
+
+ 
+
+out_sieveIF <- outs[,c("const", "n", "iter", "estimate", "CI_left", "CI_right")]
+out_sieveIF$method = "sieve_IF"
+col_names <- colnames(out_sieveIF)
+
+ out_sieveIF_df <- outs[,c("const", "n", "iter", "estimate", "CI_df_left", "CI_df_right")]
+out_sieveIF_df$method = "sieve_IF_df_adjusted"
+colnames(out_sieveIF_df) <- col_names
+
+out_sieveboot <- outs[,c("const", "n", "iter", "estimate", "CI_boot_left", "CI_boot_right")]
+out_sieveboot$method = "sieve_boot"
+colnames(out_sieveboot) <- col_names
+
+out_tmle <- outs[,c("const", "n", "iter", "estimate_tmle", "CI_left_tmle", "CI_right_tmle")]
+out_tmle$method = "tmle"
+colnames(out_tmle) <- col_names
+
+out_aipw <- outs[,c("const", "n", "iter", "estimate_aipw", "CI_left_aipw", "CI_right_aipw")]
+out_aipw$method = "aipw"
+colnames(out_aipw) <- col_names
+
+out_lm <- outs[,c("const", "n", "iter", "estimate_lm", "CI_left_lm", "CI_right_lm")]
+out_lm$method = "lm"
+colnames(out_lm) <- col_names
+
+results <- rbind(out_sieveIF, out_sieveIF_df, out_sieveboot, out_tmle, out_aipw, out_lm)
+
+
+coverage <- results[, mean(ATE >= CI_left & ATE <= CI_right), by = c("const", "method", "n")]
+CI_width <- results[, mean(CI_right - CI_left), by = c("const", "method", "n")]
+bias <- results[, mean(estimate - ATE), by = c("const", "method", "n")]
+se <- results[, sd(estimate - ATE), by = c("const", "method", "n")]
+
+plot_data <- data.table(const = coverage$const, method = coverage$method, n = coverage$n, 
+           bias = abs(bias[[4]]),
+           se = se[[4]],
+           coverage = coverage[[4]],
+           CI_width = CI_width[[4]]
+           )
+
+library(ggplot2)
+ 
+ggplot(plot_data[method %in% c("lm", "aipw", "tmle", "sieve_IF")], aes(x=n, y = bias, group = method, color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5))  + labs(x = "Sample Size (n)", y = "Empirical Bias", color = "Method", group = "Method", linetype = "Method")
+
+
+#ggsave("SimPlotLassoHighDim_bias.pdf", width = 7, height = 4)
+
+ggsave("SimPlotHALcomplex_bias.pdf", width = 7, height = 4)
+
+
+ggplot(plot_data[method %in% c("lm", "aipw", "tmle", "sieve_IF")], aes(x=n, y = se, group = method, color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5))  + labs(x = "Sample Size (n)", y = "Empirical Standard Error", color = "Method", group = "Method", linetype = "Method")
+
+ggsave("SimPlotHALcomplex_se.pdf", width = 7, height = 4)
+
+ggplot(plot_data[method %in% c("aipw", "tmle","lm", "sieve_IF_df_adjusted")] , aes(x=n, y = coverage, group = method, color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5))  + labs(x = "Sample Size (n)", y = "Empirical CI coverage", color = "Method", group = "Method", linetype = "Method") + scale_y_continuous(breaks = c(0.95, 0.9, 0.85, 0.8, 0.7, 0.6, 0.5))
+
+ggsave("SimPlotHALcomplex_coverage.pdf", width = 7, height = 4)
+
+
+ggplot(plot_data[!(method %in% c("aipw", "tmle"))] , aes(x=n, y = coverage, group = method, color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5))  + labs(x = "Sample Size (n)", y = "Empirical CI coverage", color = "Method", group = "Method", linetype = "Method")
+
+ggplot(plot_data[method %in% c("aipw", "tmle", "lm", "sieve_IF_df_adjusted")] , aes(x=n, y = CI_width, group = method, color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5)) + labs(x = "Sample Size (n)", y = "Average CI width", color = "Method", group = "Method", linetype = "Method")
+
+ggplot(plot_data[!(method %in% c("aipw", "tmle"))] , aes(x=n, y = CI_width, group = method, color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5)) + labs(x = "Sample Size (n)", y = "Average CI width", color = "Method", group = "Method", linetype = "Method")
+
+#ggsave("SimPlot.pdf", width = 8, height = 5)
+```
+
+```{r}
+ATE = 1
+print("sieve IF")
+   
+    print(outs[,mean(ATE >= CI_left & ATE <= CI_right), by = c("name", "const", "n")] )
+     print(outs[, mean(as.numeric(CI_right) - as.numeric(CI_left)), by = c("name", "const", "n")])
+     print("sieve IF - df adjusted")
+        print(outs[,mean(ATE >= CI_df_left & ATE <= CI_df_right), by = c("name", "const", "n")] )
+         print(outs[, mean(as.numeric(CI_df_right) - as.numeric(CI_df_left)), by = c("name", "const", "n")])
+ print("sieve IF - boot")
+    print(    outs[,mean(ATE >= CI_boot_left & ATE <= CI_boot_right), by = c("name", "const", "n")] )
+   print(outs[, mean(as.numeric(CI_boot_right) - as.numeric(CI_boot_left)), by = c("name", "const", "n")])
+
+ 
+    print("tmle")
+    print(    outs[,mean(ATE >= CI_left_tmle & ATE <= CI_right_tmle), by = c("name", "const", "n")] 
+)
+     print(outs[, mean(as.numeric(CI_right_tmle) - as.numeric(CI_left_tmle)), by = c("name", "const", "n")])
+     print("lm")
+    print(    outs[,mean(ATE >= CI_left_lm & ATE <= CI_right_lm), by = c("name", "const", "n")] 
+)
+     print(outs[, mean(as.numeric(CI_right_lm) - as.numeric(CI_left_lm)), by = c("name", "const", "n")])
+     
+     
+# 
+```
+  

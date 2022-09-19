@@ -1,5 +1,5 @@
 
-
+library(hal9001)
 
 
 #' @export
@@ -31,7 +31,7 @@ causalsieve <- R6::R6Class(
     },
 
     add_target_parameter = function(formula =  g(A=1,X=X) - g(A=0,X=X) ~ 1 ,  name = NULL, bootstrap_se = TRUE  ) {
-
+      n <- length(self$args$A)
       m_functional_string <- as.character(formula)[2]
       msm_model_string <- as.character(formula)[3]
       formula_msm <-  as.formula(paste0("~", msm_model_string))
@@ -77,6 +77,7 @@ causalsieve <- R6::R6Class(
 
       m_functional_msm = function(X,A, g) {
 
+
         m_A_X_g <- eval(parse(text=m_functional_string))
         if(is_intercept_msm) {
 
@@ -114,7 +115,7 @@ causalsieve <- R6::R6Class(
       private$.target_parameters[[name_key]] <- parameter_specification
       return(invisible())
     },
-    estimate = function(bootstrap_se = TRUE  ) {
+    estimate = function(bootstrap_se = TRUE , include_se_df_correction = TRUE ) {
       target_parameters <- self$target_parameters
       X <- self$args$X
       A <- self$args$A
@@ -129,14 +130,16 @@ causalsieve <- R6::R6Class(
 
 
         g_basis_gen <- self$args$g_basis_generator
-
         g_basis <- g_basis_gen(X=X,A=A)
         # Compute theta_n functional at each basis function
         # If theta_n functional is vector-valued then a matrix of dimension (len(theta_n) x nbasis)
         theta_n_basis <- do.call(cbind, lapply(seq_len(ncol(g_basis)), function(j) {
           g_fun <- function(X,A) {
+
             g_basis_gen(X=X,A=A)[,j]
+
           }
+
           return(theta_functional(X=X, A=A, g = g_fun))
         }))
 
@@ -146,27 +149,29 @@ causalsieve <- R6::R6Class(
 
         theta_n <- theta_n_basis %*% coef_sieve
         estimate <- theta_n
-
         alpha_n_mat <- apply(theta_n_basis, 1, function(theta_n_basis_row) {
           alpha_n_coef <- solve(t(g_basis) %*% g_basis / n, theta_n_basis_row)
           alpha_n <- g_basis %*% alpha_n_coef
         })
 
-        if( any(abs(theta_n - colMeans(alpha_n_mat * g_n)) > 1e-9)){
-          print(theta_n )
-          print( colMeans(alpha_n_mat * g_n))
+        if( any(abs(theta_n - colMeans(alpha_n_mat * g_n)) > 1e-5)){
           print(theta_n - colMeans(alpha_n_mat * g_n))
-          stop("Estimates dont match")
+          warning("Estimates Riesz-based and sieve-plugin-based estimates dont match. Contact developer.")
         }
 
         m_X_A_g_basis <-  lapply(seq_len(ncol(g_basis)), function(j) {
           g_fun <- function(X,A) {
+
             g_basis_gen(X=X,A=A)[,j]
+
           }
+
           return(coef_sieve[j] * as.matrix(m_functional(X=X,A=A, g=g_fun)))
         })
 
         m_X_A_g_n <- as.matrix(purrr::reduce(m_X_A_g_basis, `+`))
+
+
         m_X_A_g_mean_mat <- do.call(cbind,lapply(1:nrow(m_X_A_g_n), function(k){
           colMeans(as.matrix(m_X_A_g_n))
         } ))
@@ -178,8 +183,10 @@ causalsieve <- R6::R6Class(
         }
 
         IF <- m_X_A_g_n - m_X_A_g_mean_mat  + alpha_n_mat * as.vector(Y - g_n)
-        se <- sqrt(diag(as.matrix(var(IF))))/sqrt(n)
+         df <- 0
+        se <- sqrt(diag(as.matrix(var(IF))) * (n/ (n - df)))/sqrt(n)
         parameter_est <- list(name = name, estimate = estimate, se = se, riesz_rep = alpha_n_mat , IF = IF,  theta_functional = theta_functional, m_functional = m_functional )
+
 
         private$.estimates[[name_key]] <- parameter_est
 
@@ -187,7 +194,7 @@ causalsieve <- R6::R6Class(
           private$.bootstrap_parameter(name_key)
         }
 
-        self$confint()
+        self$confint(, include_se_df_correction = include_se_df_correction)
       }
       return(invisible(private$.estimates))
     },
@@ -207,15 +214,21 @@ causalsieve <- R6::R6Class(
       rownames(out) <- NULL
       return(out)
     },
-    confint = function(level = 0.95) {
+    confint = function(level = 0.95, include_se_df_correction = TRUE) {
       estimates <- self$estimates
       param_names <- names(estimates)
+      n <- length(self$args$A)
       for(name in param_names) {
         param <- estimates[[name]]
         estimate <- param$estimate
         se <- param$se
         se_boot <- param$se_boot
-
+        if(include_se_df_correction) {
+          df <- ncol(self$regression_fit$g_basis)
+        } else {
+          df <- 0
+        }
+        se <- se * sqrt(n / (n-df))
         CI <- cbind(estimate - qnorm( 1 - (1-level)/2) * se , estimate + qnorm( 1 - (1-level)/2) * se )
         CI_boot <-  cbind(estimate - qnorm( 1 - (1-level)/2) * se_boot , estimate + qnorm( 1 - (1-level)/2) * se_boot )
         param$CI <- CI
@@ -325,25 +338,26 @@ causalsieve <- R6::R6Class(
 )
 
 #' @export
-make_g_basis_generator_HAL <- function(X, A, Y, max_degree = 2, smoothness_orders = 1, num_knots =  c(30,10), formula_hal = NULL, screen_basis = TRUE, lambda= NULL, fit_control = list() ,...) {
+make_g_basis_generator_HAL <- function(X, A, Y, max_degree = 2, smoothness_orders = 1, num_knots =  c(30,10), formula_hal = NULL, screen_basis = TRUE, lambda= NULL, fit_control = list(lambda.min.ratio=  1e-5) ,...) {
   V <- as.matrix(cbind(X,A))
-  library(hal9001)
+
 
   if(!screen_basis) {
     fit_control$cv_select <- FALSE
     lambda <- 1e-6
   }
-  hal_fit <- hal9001::fit_hal(V, Y, formula = formula_hal,  family = "gaussian", lambda = lambda, fit_control = fit_control, max_degree = max_degree, smoothness_orders = smoothness_orders, num_knots =  num_knots, reduce_basis = 0.001)
+
+
+  basis_formula <- formula_hal(formula_hal, smoothness_orders = smoothness_orders, num_knots = num_knots, X = as.data.frame(V) )$basis_list
+  hal_fit <- hal9001::fit_hal(V, Y, basis_list = basis_formula,  family = "gaussian", lambda = lambda, fit_control = fit_control, max_degree = max_degree, smoothness_orders = smoothness_orders, num_knots =  num_knots, reduce_basis = 10/length(A))
   basis_list <- c(list(list(cols = 1, cutoffs = min(V) - 1, orders = 0)) , hal_fit$basis_list)
 
   basis_list_reduced <- basis_list[abs(hal_fit$coefs) > 0]
 
 
-
-
   g_basis_generator <- function(A,X) {
     V <- as.matrix(cbind(X,A))
-    g_basis <- as.matrix(make_design_matrix(V, basis_list_reduced))
+    g_basis <- as.matrix(make_design_matrix(V, basis_list_reduced, 0.9))
     return(g_basis)
   }
   return(g_basis_generator)
@@ -356,21 +370,22 @@ make_g_basis_generator_LASSO <- function(X, A, Y, formula = ~., use_lambda_min =
 
   V <- model.matrix(formula, as.data.frame(cbind(X,A)))
 
-  cvglmnet.fit <- glmnet::cv.glmnet(V, Y, family = "gaussian", intercept = TRUE )
+  cvglmnet.fit <- glmnet::cv.glmnet(V, Y, family = "gaussian", intercept = FALSE, ...)
   if(use_lambda_min) {
-    beta <- coef(cvglmnet.fit$glmnet.fit, s = cvglmnet.fit$lambda.min )
+    beta <- coef(cvglmnet.fit$glmnet.fit, s = cvglmnet.fit$lambda.min )[-1]
   } else {
-    beta <- coef(cvglmnet.fit$glmnet.fit, s = cvglmnet.fit$lambda.1se )
+    beta <- coef(cvglmnet.fit$glmnet.fit, s = cvglmnet.fit$lambda.min )[-1]
   }
-
-
+  if(length(beta) != ncol(V)) {
+    stop("Something went wrong.")
+  }
   beta <- as.vector(beta)
   keep <- (beta!=0)
 
 
   g_basis_generator <- function(A,X) {
 
-    g_basis <- cbind(1,model.matrix(formula, as.data.frame(cbind(X,A))))[, keep, drop = FALSE]
+    g_basis <- model.matrix(formula, as.data.frame(cbind(X,A)))[, keep, drop = FALSE]
     return(g_basis)
   }
   return(g_basis_generator)

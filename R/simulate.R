@@ -1,5 +1,41 @@
 
 
+generate_data_nonlinear_CATE <- function(n, const = 1.5) {
+
+  W1 <- runif(n, -1 , 1)
+  W2 <- runif(n, -1 , 1)
+  W3 <- runif(n, -1 , 1)
+  W4 <- runif(n, -1 , 1)
+  X <- cbind(W1, W2, W3, W4)
+  colnames(X) <- c("W1", "W2", "W3", "W4")
+  pi <- plogis(const*(W1+W2 + W3 + W4))
+  A <- rbinom(n, 1, pi)
+  CATE <- 1 + W1 + W2 + W3 + W4
+  g0 <- W1*sin(5*W1) + cos(5*W2) + sin(5*W3) + W4*cos(5*W4)
+  g1 <- g0 + A * CATE
+  Y <- rnorm(n,  A*g1 + (1-A)*g0  , 1.5)
+  return(list(X=X, A=A, Y=Y, data= as.data.frame(cbind(X,A,Y)), g1  = g1, g0 = g0, pi=pi,  ATE =   1))
+}
+
+
+generate_data_linear_smallsample <- function(n, const = 1.5) {
+
+  W1 <- runif(n, -1 , 1)
+  W2 <- runif(n, -1 , 1)
+  W3 <- runif(n, -1 , 1)
+  W4 <- runif(n, -1 , 1)
+  X <- cbind(W1, W2, W3, W4)
+  colnames(X) <- c("W1", "W2", "W3", "W4")
+  pi <- plogis(const*(W1+W2 + W3 + W4))
+  A <- rbinom(n, 1, pi)
+  g1 <- 1 + 1*(1 + W3   + W4 ) + W1 + W2
+  g0 <- 1 + W1 + W2
+  Y <- rnorm(n, A*g1 + (1-A)*g0, 1.5)
+  return(list(X=X, A=A, Y=Y, data= as.data.frame(cbind(X,A,Y)), g1  = g1, g0 = g0, pi=pi,  ATE =  1))
+}
+
+
+
 generate_data_linear <- function(n, const = 1.5) {
 
   W1 <- runif(n, -1 , 1)
@@ -16,6 +52,32 @@ generate_data_linear <- function(n, const = 1.5) {
   return(list(X=X, A=A, Y=Y, data= as.data.frame(cbind(X,A,Y)), g1  = g1, g0 = g0, pi=pi,  ATE =  1))
 }
 
+
+
+generate_data_linear_lasso <- function(n, const = 1.5) {
+
+  W1 <- runif(n, -1 , 1)
+  W2 <- runif(n, -1 , 1)
+  W3 <- runif(n, -1 , 1)
+  W4 <- runif(n, -1 , 1)
+  W5 <- runif(n, -1 , 1)
+  W6 <- runif(n, -1 , 1)
+  W7 <- runif(n, -1 , 1)
+  W8 <- runif(n, -1 , 1)
+  W9 <- runif(n, -1 , 1)
+  W10 <- runif(n, -1 , 1)
+
+  X <- cbind(W1, W2, W3, W4, W5, W6, W7, W8, W9, W10)
+  colnames(X) <- c("W1", "W2", "W3", "W4", "W5", "W6", "W7", "W8", "W9", "W10")
+  pi <- plogis(const*(W1  + W3 + W5 + W7 + W9))
+  A <- rbinom(n, 1, pi)
+  g1 <- 1 + 1*(1 + W2 + W3 + W6 + W8  ) +  W2 + W3 + W6 + W7 + W10
+  g0 <- 1 + W2 + W3 + W6 + W7 + W10
+  Y <- rnorm(n, A*g1 + (1-A)*g0, 1.5)
+  return(list(X=X, A=A, Y=Y, data= as.data.frame(cbind(X,A,Y)), g1  = g1, g0 = g0, pi=pi,  ATE =  1))
+}
+
+
 generate_data_nonlinear <- function(n, const = 1.5) {
 
   W1 <- runif(n, -1 , 1)
@@ -24,9 +86,12 @@ generate_data_nonlinear <- function(n, const = 1.5) {
   W4 <- runif(n, -1 , 1)
   X <- cbind(W1, W2, W3, W4)
   colnames(X) <- c("W1", "W2", "W3", "W4")
-  A <- rbinom(n, 1, plogis(const*(W1+W2 + W3 + W4)))
-  Y <- rnorm(n, 1 + A + A*(abs(W1) + sin(4*W2) + abs(W3) + cos(4*W4)  ) + sin(4*W1) + abs(W2) + sin(4*W3) + exp(W4) , 1.5)
-  return(list(X=X, A=A, Y=Y, data= as.data.frame(cbind(X,A,Y))))
+  pi <- plogis(const*(W1+W2 + W3 + W4))
+  A <- rbinom(n, 1, pi)
+  g1 <- 1 + 1 + 1*(abs(W1) + sin(5*W2) + abs(W3) + cos(5*W4)  ) + sin(5*W1) + abs(W2) + sin(5*W3) + 1/(1.25 + W4)
+  g0 <- 1 + 0 + 0*(abs(W1) + sin(5*W2) + abs(W3) + cos(5*W4)  ) + sin(5*W1) + abs(W2) + sin(5*W3) + 1/(1.25 + W4)
+  Y <- rnorm(n,  A*g1 + (1-A)*g0  , 1.5)
+  return(list(X=X, A=A, Y=Y, data= as.data.frame(cbind(X,A,Y)), g1  = g1, g0 = g0, pi=pi,  ATE =   1.806832))
 }
 
 get_data_generator_linear <- function(const) {
@@ -36,9 +101,30 @@ get_data_generator_linear <- function(const) {
   out
 }
 
+get_data_generator_linear_smallsample <- function(const) {
+  out <- function(n) {
+    generate_data_linear_smallsample(n, const)
+  }
+  out
+}
+
+
+get_data_generator_linear_lasso <- function(const) {
+  out <- function(n) {
+    generate_data_linear_lasso(n, const)
+  }
+  out
+}
+
 get_data_generator_nonlinear <- function(const) {
   out <- function(n) {
     generate_data_nonlinear(n, const)
+  }
+  out
+}
+get_data_generator_nonlinear_CATE <- function(const) {
+  out <- function(n) {
+    generate_data_nonlinear_CATE(n, const)
   }
   out
 }
@@ -128,3 +214,105 @@ do_one_experiment <- function(n = 200, data_generator,  smoothness_orders, num_k
   output <- list(est_CRWO = est_CRWO, est_TMLE = est_TMLE, est_AIPW = est_AIPW , true_approx = oracle_est, true = ATE_linear)
   return(output)
 }
+
+
+library(data.table)
+
+
+run_sims <- function(const, n, nsims,  formula_hal = ~ h(.) + h(.,A), num_knots = c(1,1), screen_basis = F, gen_fun, lrnr_pi = Lrnr_glmnet$new(), lrnr_g = Lrnr_glmnet$new(formula = ~ . + A * .),nboots = 500) {
+
+  out_list <- list()
+  out <- lapply(1:nsims, function(iter) {
+    try({
+      print("Current settings:")
+      print(n)
+      print(const)
+      print(iter)
+      datam_list <- gen_fun(const)(n)
+
+      X <- datam_list$X
+      A <- datam_list$A
+      Y <- datam_list$Y
+
+      g_basis_gen <-make_g_basis_generator_HAL(X,A,Y, formula_hal =formula_hal, smoothness_orders=1, num_knots = num_knots, max_degree = 2, screen_basis = screen_basis)
+      # datam_list_oracle <- gen_fun(const)(n=5000)
+      # g_basis_oracle <- g_basis_gen(X=datam_list_oracle$X, A=datam_list_oracle$A)
+      # print(dim(g_basis_oracle))
+      # beta <- coef(glm.fit(g_basis_oracle, datam_list_oracle$Y, family = gaussian()))
+      # ATE <- mean((g_basis_gen(X=datam_list_oracle$X, A= 1)-g_basis_gen(X=datam_list_oracle$X, A= 0) ) %*%beta)
+      ATE <- datam_list$ATE
+
+      causal_sieve <- causalsieve$new(X, A, Y, g_basis_gen, nboots = nboots)
+      causal_sieve$add_target_parameter(g(A=1,X=X) - g(A=0,X=X) ~ 1, name = "ATE")
+      # causal_sieve$add_target_parameter(g(A=1,X=X) - g(A=0,X=X) ~ 1 + W1)
+      causal_sieve$estimate()
+      #\causal_sieve$summary()
+      name <- unlist(sapply(causal_sieve$estimates, `[[`, "name"))
+
+      estimates <- unlist(sapply(causal_sieve$estimates, `[[`, "estimate"))
+      CI_IF_df <- do.call(rbind, lapply(causal_sieve$estimates, `[[`, "CI"))
+      causal_sieve$confint(include_se_df_correction = FALSE)
+      CI_IF <- do.call(rbind, lapply(causal_sieve$estimates, `[[`, "CI"))
+      CI_boot <- do.call(rbind, lapply(causal_sieve$estimates, `[[`, "CI_boot"))
+      out <- cbind(t(as.data.table(c(iter, name))), t(as.data.table(as.numeric(c(estimates, CI_IF, CI_IF_df, CI_boot)))))
+      print(t(as.data.table(as.numeric(c(estimates, CI_IF, CI_IF_df, CI_boot)))))
+
+      colnames(out) <- c("iter", "name", "estimate", "CI_left", "CI_right", "CI_df_left", "CI_df_right", "CI_boot_left", "CI_boot_right")
+      #
+
+      data <- as.data.frame(cbind(X,A,Y))
+      g_ests <- compute_g(data, lrnr_g = lrnr_g)
+      g1 <- g_ests$g1
+      g0 <- g_ests$g0
+      pi <-compute_pi(as.data.frame(cbind(X,A,Y)), lrnr_pi = lrnr_pi)
+      tmle <- compute_TMLE (data, pi, g1, g0,level = 0.05)
+      aipw <- compute_AIPW (data, pi, g1, g0,level = 0.05)
+      lm <- compute_glm (data,level = 0.05)
+
+      comp <- as.numeric(unlist(c(tmle[-2], aipw[-2], lm[-2])))
+      names(comp) <- c(paste0(c("estimate", "CI_left", "CI_right"), "_tmle"),
+                       paste0(c("estimate", "CI_left", "CI_right"), "_aipw"),
+                       paste0(c("estimate", "CI_left", "CI_right"), "_lm"))
+      #
+      out <- cbind(out, t(as.data.table(comp)))
+      colnames(out) <- c(
+        c("iter", "name", "estimate", "CI_left", "CI_right", "CI_df_left", "CI_df_right", "CI_boot_left", "CI_boot_right"),
+        c(paste0(c("estimate", "CI_left", "CI_right"), "_tmle"),
+          paste0(c("estimate", "CI_left", "CI_right"), "_aipw"),
+          paste0(c("estimate", "CI_left", "CI_right"), "_lm"))
+      )
+      out_list[[iter]] <<- out
+      out_full <- as.data.table(do.call(rbind, out_list))
+
+      print("sieve IF")
+
+      print(out_full[,mean(ATE >= CI_left & ATE <= CI_right), by = "name"][[2]])
+      print(out_full[, mean(as.numeric(CI_right) - as.numeric(CI_left))])
+      print("sieve IF - df adjusted")
+      print(out_full[,mean(ATE >= CI_df_left & ATE <= CI_df_right), by = "name"][[2]])
+      print(out_full[, mean(as.numeric(CI_df_right) - as.numeric(CI_df_left))])
+      print("sieve IF - boot")
+      print(    out_full[,mean(ATE >= CI_boot_left & ATE <= CI_boot_right), by = "name"][[2]])
+      print(out_full[, mean(as.numeric(CI_boot_right) - as.numeric(CI_boot_left))])
+
+
+      print("tmle")
+      print(    out_full[,mean(ATE >= CI_left_tmle & ATE <= CI_right_tmle), by = "name"][[2]]
+      )
+      print(out_full[, mean(as.numeric(CI_right_tmle) - as.numeric(CI_left_tmle))])
+      print("lm")
+      print(    out_full[,mean(ATE >= CI_left_lm & ATE <= CI_right_lm), by = "name"][[2]]
+      )
+      print(out_full[, mean(as.numeric(CI_right_lm) - as.numeric(CI_left_lm))])
+
+      return(out)
+    })
+  })
+
+  out <- as.data.frame(do.call(rbind, out_list))
+  out$const <- const
+  out$n <- n
+  return(out)
+
+}
+

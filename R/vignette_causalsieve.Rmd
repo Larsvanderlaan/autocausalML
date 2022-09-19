@@ -186,7 +186,7 @@ d <- 3
 X <- replicate(d, runif(n, -1 , 1))
 colnames(X) <- paste0("X", 1:d)
 A <- rbinom(n, 1, plogis(rowMeans(X)))
-Y <- rnorm(n, rowMeans(X) +  A*X[,1])
+Y <- rnorm(n, rowMeans(X) + A + A*X[,1])
 
 
 # Make g_basis_generator using LASSO
@@ -201,10 +201,8 @@ causal_sieve$add_target_parameter(g(A=1,X) - g(A=0,X) ~ 1 + X1, name = "CATE~1+X
 # CATE additive working model
 causal_sieve$add_target_parameter(g(A=1,X) - g(A=0,X) ~ ., name = "CATE~.")
 
-# Dynamic interventions
+# Dynamic
 causal_sieve$add_target_parameter(g(A=(X[,1]>=0),X=X) - g(A=0,X=X) ~ 1 )
-causal_sieve$add_target_parameter(g(A=(X[,1]<=0),X=X) - g(A=0,X=X) ~ 1 )
-
 
 causal_sieve$estimate()
 causal_sieve$summary()
