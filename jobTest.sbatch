@@ -1,4 +1,4 @@
- #!/bin/bash
+#!/bin/bash
 #SBATCH --job-name sieveTest1              # Set a name for your job. This is especially useful if you have multiple jobs queued.
 #SBATCH --partition short             # Slurm partition to use
 #SBATCH --ntasks 1                    # Number of tasks to run. By default, one CPU core will be allocated per task
