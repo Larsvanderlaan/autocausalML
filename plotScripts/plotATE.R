@@ -3,21 +3,24 @@
 links <- c("SimPlotHALcomplex",  "SimPlotLassoHighDim", "SimPlotHALsimple"
 )
 
-link <- links[1]
-
-ATE <- 1.811417
-#ATE <- 1
+link <- links[3]
+ ATE <- 1.811417
+ATE <- 1
 library(data.table)
-outs <- fread("ComplexParametricHAL3.csv")
-outs <- outs[!(const %in% c(5,8))]
+outs <- fread("ComplexParametricHAL4_3.csv")
+outs <- outs[!(const %in% c( 8))]
+print(table(outs$const))
 outs2 <- fread("ComplexParametricHAL4_85.csv")
-#outs <- outs[!(const %in% c(5,8))]
+ outs2 <- outs2[!(const %in% c( 5))]
 outs <- rbind(outs, outs2)
-
+print(table(outs$const))
+outs <-  fread("ComplexParametricHAL4_3.csv")
  # outs <- fread("SimpleParametricHAL2.csv")
+outs <- fread("SimpleParametricHAL_WithRelaxed.csv")
  #outs <- rbind(fread("LassoHighDim.csv"),fread("LassoHighDim2500.csv"))
 
-
+#outs <- fread("LassoHighDim_relaxed.csv")
+#outs <- fread("ComplexParametricHAL_relaxed.csv")
 # outs$const[outs$const == 3] <- "overlap: 1e-06"
 # outs$const[outs$const == 5] <- "overlap: 1e-10"
 # outs$const[outs$const == 8] <- "overlap: 1e-15"
@@ -59,7 +62,9 @@ out_lm <- outs[,c("const", "n", "iter", "estimate_lm", "CI_left_lm", "CI_right_l
 out_lm$method = "Linear-model"
 colnames(out_lm) <- col_names
 
-
+out_sieveIF_relaxed_df <- outs[,c("const", "n", "iter", "estimate_relaxed", "CI_df_left_relaxed", "CI_df_right_relaxed")]
+out_sieveIF_relaxed_df$method = "Sieve relaxed - IF w/ df adjust."
+colnames(out_sieveIF_relaxed_df) <- col_names
 
 out_sieve_oracle <-out_sieveIF
 out_sieve_oracle$method <- "Sieve - oracle se"
@@ -68,7 +73,7 @@ out_sieve_oracle[, CI_left:= estimate - qnorm(1-0.05/2) * sd(estimate), by = c("
 out_sieve_oracle[, CI_right:= estimate + qnorm(1-0.05/2) * sd(estimate), by = c("const", "n")]
 
 
-results <- rbind(out_sieve, out_sieve_oracle, out_sieveIF, out_sieveIF_df, out_sieveboot, out_TMLE, out_AIPW, out_lm)
+results <- rbind(out_sieve, out_sieve_oracle, out_sieveIF, out_sieveIF_df, out_sieveIF_relaxed_df, out_sieveboot, out_TMLE, out_AIPW, out_lm)
 
 
 coverage <- results[, mean(ATE >= CI_left & ATE <= CI_right, na.rm=T), by = c("const", "method", "n")]
@@ -86,14 +91,14 @@ plot_data <- data.table(const = coverage$const, method = coverage$method, n = co
 
 library(ggplot2)
 
-ggplot(plot_data[method %in% c("Linear-model", "AIPW", "TMLE", "Sieve - plugin")], aes(x=n, y = bias, group = method, color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5))  + labs(x = "Sample Size (n)", y = "Empirical Bias", color = "Method", group = "Method", linetype = "Method")
+ggplot(plot_data[method %in% c("Linear-model", "AIPW", "TMLE", "Sieve - plugin", "Sieve relaxed - IF w/ df adjust.")], aes(x=n, y = bias, group = method, color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5))  + labs(x = "Sample Size (n)", y = "Empirical Bias", color = "Method", group = "Method", linetype = "Method")
 
 
 
 
 ggsave(paste0(link, "_bias.pdf"), width = 7, height = 4)
 
-ggplot(plot_data[method %in% c("Linear-model", "AIPW", "TMLE", "Sieve - plugin")], aes(x=n, y = se, group = method, color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5))  + labs(x = "Sample Size (n)", y = "Empirical Standard Error", color = "Method", group = "Method", linetype = "Method")
+ggplot(plot_data[method %in% c("Linear-model", "AIPW", "TMLE", "Sieve - plugin", "Sieve relaxed - IF w/ df adjust.")], aes(x=n, y = se, group = method, color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5))  + labs(x = "Sample Size (n)", y = "Empirical Standard Error", color = "Method", group = "Method", linetype = "Method")
 
 
 #ggsave("SimPlotHALsmallSample_se.pdf", width = 7, height = 4)
@@ -102,7 +107,7 @@ ggsave(paste0(link, "_se.pdf"), width = 7, height = 4)
 
 
 
-ggplot(plot_data[method %in% c("AIPW", "TMLE","Linear-model", "Sieve - plugin")] , aes(x=n, y = cov_oracle, group = method, color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5))  + labs(x = "Sample Size (n)", y = "Oracle CI coverage", color = "Method", group = "Method", linetype = "Method") + scale_y_continuous( )
+ggplot(plot_data[method %in% c("AIPW", "TMLE","Linear-model", "Sieve - plugin", "Sieve relaxed - IF w/ df adjust.")] , aes(x=n, y = cov_oracle, group = method, color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5))  + labs(x = "Sample Size (n)", y = "Oracle CI coverage", color = "Method", group = "Method", linetype = "Method") + scale_y_continuous( )
 
 ggsave(paste0(link, "_coverage_oracle.pdf"), width = 7, height = 4)
 

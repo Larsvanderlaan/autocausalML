@@ -1,0 +1,78 @@
+---
+title: "bootstrapiso"
+output: html_document
+date: '2022-09-27'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r}
+n <- 300
+X <- runif(n)
+X <- X[order(X)]
+Y <- sapply(seq(0, 1, length = n), function(x) {
+  mean(X <= x)
+})
+fit <- fdrtool::gcmlcm(seq(0, 1, length= n), Y)
+ 
+ 
+
+
+
+```
+
+```{r}
+ 
+cov <- lapply(1:100, function(i){
+n <- 500
+X <- truncnorm::rtruncnorm(n, 0,1, 0.5, 0.2)
+X <- runif(n)
+Y <- rnorm(n,exp(X), 0.6   * plogis(5*(X-0.5)) )
+Y <- Y[order(X)]
+X <- X[order(X)]
+ 
+fit <- isoreg(X,Y)
+x0 <- 0.1
+y0 <- exp(x0)
+knots <- fit$x[fit$iKnots]
+pred0 <- fit$yf[which.min(abs(fit$x - x0))]
+v0 <- 0 #min(knots[knots >= x0])
+u0 <- 0 #max(knots[knots < x0])
+
+
+out <- lapply(1:100, function(iter){
+index <- sample(1:n, n, replace = T)
+X <- X[index]
+Y <- Y[index]
+ 
+sort_index <- order(X)
+Y <- Y[order(X)]
+X <- X[order(X)]
+ 
+fit <- isoreg(X,Y)
+knots <- fit$x[fit$iKnots]
+pred0 <- fit$yf[which.min(abs(fit$x - x0))]
+v0 <-  0#min(knots[knots >= x0])
+u0 <- 0 #max(knots[knots < x0])
+
+list(iter = iter, u0 =u0, x0 = x0, v0 = v0, pred0 = pred0)
+}) 
+library(data.table)
+data <- rbindlist(out)
+width <- (data$v0 - data$u0)
+pred <- (data$pred0)
+#zhat <- pred / width
+#qs <- quantile(zhat, c(0.025, 0.975))
+ 
+CI <-  pred0 + quantile(pred - pred0, c(0.025, 0.975))
+CI_old <- quantile(pred, c(0.025, 0.975))
+c(y0 >= CI_old[1] & y0 <= CI_old[2], y0 >= CI[1] & y0 <= CI[2])
+})
+
+colMeans(do.call(rbind, cov))
+
+```

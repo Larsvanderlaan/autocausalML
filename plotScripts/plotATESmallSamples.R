@@ -1,7 +1,7 @@
 
 
 
- link <-  "SimPlotHALsmallSample"
+ link <-  "SimPlotHALsmallSample2"
 
 
 ATE <- 1

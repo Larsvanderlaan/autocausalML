@@ -109,7 +109,7 @@ run_sims_CATE <- function(const, n, nsims,   nboots = 2) {
 
 library(sl3)
 out_list <- list()
-outs <- lapply(c(  1,4, 7), function(const) {
+outs <- lapply(c(   4, 7,1), function(const) {
   out_list[[as.character(const)]] <<-  list()
   lapply(rev(c(   500, 1000,  2500, 5000   )) ,function(n) {
 
@@ -117,7 +117,7 @@ outs <- lapply(c(  1,4, 7), function(const) {
 
     out_list[[as.character(const)]][[as.character(n)]] <<- out
     out2 <- rbindlist(unlist(out_list, recursive = F))
-    fwrite(out2, file = "SimsHALCATE3.csv")
+    fwrite(out2, file = "SimsHALCATE4_not1.csv")
     return(out)
 
   })

@@ -113,8 +113,8 @@ compute_TMLE_CATE_sp <- function(data, V,  pi, g1, g0,level = 0.05) {
   beta <- coef(glm.fit(A*V, Y, offset = g0, family = gaussian()))
   g1 <- as.vector(g0 +   V %*% beta)
   g <- ifelse(data$A==1, g1, g0)
-  var_Y1 <- var(Y[A==1])
-  var_Y0 <- var(Y[A==0])
+  var_Y1 <- var(Y )
+  var_Y0 <- var(Y )
   var_Y <- ifelse(A==1, var_Y1, var_Y0)
 
   gradM <- V

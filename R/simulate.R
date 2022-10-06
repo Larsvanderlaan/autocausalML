@@ -1,5 +1,61 @@
 
 
+
+generate_data_univariate <- function(n, const = 1.5) {
+
+  W1 <- runif(n, -1 , 1)
+  X <- as.matrix(W1)
+  colnames(X) <- c("W1")
+  pi <- plogis(const*(2*W1))
+  A <- rbinom(n, 1, pi)
+  CATE <- 1 + W1*cos(5*W1)
+  g0 <- sin(5*W1)
+  g1 <- g0 + CATE
+  g <- A*g1 + (1-A)*g0
+  Y <- rnorm(n, g, 0.2)
+  return(list(X=X, A=A, Y=Y, data= as.data.frame(cbind(X,A,Y)), g1  = g1, g0 = g0, pi=pi,  ATE =  1))
+}
+
+
+
+
+generate_data_linear_fluct <- function(n, const = 1.5) {
+
+  W1 <- runif(n, -1 , 1)
+  W2 <- runif(n, -1 , 1)
+  W3 <- runif(n, -1 , 1)
+  W4 <- runif(n, -1 , 1)
+  X <- cbind(W1, W2, W3, W4)
+  colnames(X) <- c("W1", "W2", "W3", "W4")
+  pi <- plogis(const*(W1+W2 + W3 + W4))
+  A <- rbinom(n, 1, pi)
+  g1 <-   2 * ( (1 )*(1 + W1 + W2 + W3 + W4)+ 3/sqrt(n) * (sin(5*W1) +  sin(5*W2) + sin(5*W3) + sin(5*W3)))
+  g0 <-  (1 )*(1 + W1 + W2 + W3 + W4) + 3/sqrt(n) * (sin(5*W1) +  sin(5*W2) + sin(5*W3) + sin(5*W3))
+  Y <- rnorm(n, A*g1 + (1-A)*g0, 1.5)
+  return(list(X=X, A=A, Y=Y, data= as.data.frame(cbind(X,A,Y)), g1  = g1, g0 = g0, pi=pi,  ATE =  1))
+}
+
+
+generate_data_binary <- function(n, const = 1.5) {
+
+  W1 <- runif(n, -1 , 1)
+  W2 <- runif(n, -1 , 1)
+  W3 <- runif(n, -1 , 1)
+  X <- cbind(W1, W2, W3)
+  colnames(X) <- c("W1", "W2", "W3")
+  pi <- plogis(const*(W1+W2 + W3 ))
+  A <- rbinom(n, 1, pi)
+  CATE <- (0.3 + (W1 + W2 + W3 )/15)
+  g0 <- 0.1 + 0.3*plogis((W1 + W2 + W3 ))
+  g1 <- g0 +  CATE
+  g1 <- pmax(g1, 0)
+  g1 <- pmin(g1,1)
+
+  Y <- rbinom(n, size = 1 , A*g1 + (1-A)*g0)
+  return(list(X=X, A=A, Y=Y, data= as.data.frame(cbind(X,A,Y)), g1  = g1, g0 = g0, pi=pi,  ATE =  0.3))
+}
+
+
 generate_data_nonlinear_CATE <- function(n, const = 1.5) {
 
   W1 <- runif(n, -1 , 1)
@@ -30,7 +86,7 @@ generate_data_linear_smallsample <- function(n, const = 1.5) {
   A <- rbinom(n, 1, pi)
   g1 <- 1 + 1*(1 + W3   + W4 ) + W1 + W2
   g0 <- 1 + W1 + W2
-  Y <- rnorm(n, A*g1 + (1-A)*g0, 1.5)
+  Y <- rnorm(n, A*g1 + (1-A)*g0, 0.3)
   return(list(X=X, A=A, Y=Y, data= as.data.frame(cbind(X,A,Y)), g1  = g1, g0 = g0, pi=pi,  ATE =  1))
 }
 
@@ -69,10 +125,10 @@ generate_data_linear_lasso <- function(n, const = 1.5) {
 
   X <- cbind(W1, W2, W3, W4, W5, W6, W7, W8, W9, W10)
   colnames(X) <- c("W1", "W2", "W3", "W4", "W5", "W6", "W7", "W8", "W9", "W10")
-  pi <- plogis(const*(W1  + W3 + W5 + W7 + W9))
+  pi <- plogis(const*(W1  + W2 + W3 + W5 + W7 + W9)/2)
   A <- rbinom(n, 1, pi)
-  g1 <- 1 + 1*(1 + W2 + W3 + W6 + W8  ) +  W2 + W3 + W6 + W7 + W10
-  g0 <- 1 + W2 + W3 + W6 + W7 + W10
+  g1 <- 1 + 1*(1 + W2 + W3 + W6   )  + W2 + W3 + W6 + W8 + W10
+  g0 <- 1 + W2 + W3 + W6 + W8 + W10
   Y <- rnorm(n, A*g1 + (1-A)*g0, 1.5)
   return(list(X=X, A=A, Y=Y, data= as.data.frame(cbind(X,A,Y)), g1  = g1, g0 = g0, pi=pi,  ATE =  1))
 }
@@ -92,6 +148,31 @@ generate_data_nonlinear <- function(n, const = 1.5) {
   g0 <- 1 + 0 + 0*(abs(W1) + sin(5*W2) + abs(W3) + cos(5*W4)  ) + sin(5*W1) + abs(W2) + sin(5*W3) + 1/(1.25 + W4)
   Y <- rnorm(n,  A*g1 + (1-A)*g0  , 1.5)
   return(list(X=X, A=A, Y=Y, data= as.data.frame(cbind(X,A,Y)), g1  = g1, g0 = g0, pi=pi,  ATE =   1.806832))
+}
+
+
+
+
+get_data_generator_univariate <- function(const) {
+  out <- function(n) {
+    generate_data_univariate(n, const)
+  }
+  out
+}
+
+get_data_generator_linear_fluct <- function(const) {
+  out <- function(n) {
+    generate_data_linear_fluct(n, const)
+  }
+  out
+}
+
+
+get_data_generator_binary <- function(const) {
+  out <- function(n) {
+    generate_data_binary(n, const)
+  }
+  out
 }
 
 get_data_generator_linear <- function(const) {

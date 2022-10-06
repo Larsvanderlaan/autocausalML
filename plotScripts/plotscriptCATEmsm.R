@@ -2,7 +2,7 @@
 
 ATE <- 1
 library(data.table)
-outs <- fread("SimsHALCATE2.csv")
+outs <- fread("SimsHALCATE4_not1.csv")
 
 # outs$const[outs$const == 3] <- "overlap: 1e-06"
 # outs$const[outs$const == 5] <- "overlap: 1e-10"
@@ -90,7 +90,7 @@ ggsave("SimPlotHALCATE_coverage_oracleinter.pdf", width = 7, height = 4)
 
 
 
-ggplot(plot_data[method %in%  c("npWorkingTMLE", "spTMLE", "Sieve - IF w/ df adjust.")] , aes(x=n, y = coverage,  color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5))  + labs(x = "Sample Size (n)", y = "Empirical CI coverage", color = "Method", group = "Method", linetype = "Method") + scale_y_continuous(breaks = c(0.95, 0.9, 0.8, 0.7, 0.6))
+ggplot(plot_data[method %in%  c("npWorkingTMLE", "spTMLE", "Sieve - IF w/ df adjust.")] , aes(x=n, y = coverage,  color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5))  + labs(x = "Sample Size (n)", y = "Empirical CI coverage", color = "Method", group = "Method", linetype = "Method") + scale_y_continuous(breaks = c(0.95, 0.93, 0.9, 0.8, 0.7, 0.6))
 
 ggsave("SimPlotHALCATE_coverageinter.pdf", width = 7, height = 4)
 
@@ -127,7 +127,7 @@ ggsave("SimPlotHALCATE_coverage_oracle_X.pdf", width = 7, height = 4)
 
 
 
-ggplot(plot_data[method %in%  c("npWorkingTMLE", "spTMLE", "Sieve - IF w/ df adjust.")] , aes(x=n, y = coverage,  color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5))  + labs(x = "Sample Size (n)", y = "Empirical CI coverage", color = "Method", group = "Method", linetype = "Method") + scale_y_continuous(breaks = c(0.95, 0.9, 0.8, 0.7, 0.6))
+ggplot(plot_data[method %in%  c("npWorkingTMLE", "spTMLE", "Sieve - IF w/ df adjust.")] , aes(x=n, y = coverage,  color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5))  + labs(x = "Sample Size (n)", y = "Empirical CI coverage", color = "Method", group = "Method", linetype = "Method") + scale_y_continuous(breaks = c(0.95,0.93, 0.9, 0.8, 0.7, 0.6))
 
 ggsave("SimPlotHALCATE_coverage_X.pdf", width = 7, height = 4)
 
