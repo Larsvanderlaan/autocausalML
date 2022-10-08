@@ -396,7 +396,7 @@ causalsieve <- R6::R6Class(
 
       sieve_bootstrap_fits <- private$.sieve_bootstrap_fits
 
-      bootstrap_estimates <- sapply(seq_along(sieve_bootstrap_fits), function(i) {
+      bootstrap_estimates <- sapply(seq_along(sieve_bootstrap_fits), function(i) {try({
         indices <- self$args$bootstrap_indices[[i]]
 
 
@@ -417,7 +417,9 @@ causalsieve <- R6::R6Class(
 
         return(bootstrap_estimate)
       })
-      bootstrap_estimates <- as.matrix(bootstrap_estimates)
+        return(NA)
+      })
+      bootstrap_estimates <- na.omit(as.matrix(bootstrap_estimates))
 
       if(nrow(bootstrap_estimates)!=length(sieve_bootstrap_fits)){
         bootstrap_estimates <- t(bootstrap_estimates)
