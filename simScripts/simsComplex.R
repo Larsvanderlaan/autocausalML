@@ -152,13 +152,13 @@ outs <- lapply(c( 3,5,8), function(const) {
   lapply(rev (c(   500, 1000,  2500 ,4000 )) ,function(n) {
     fit_control <- list()
     if(n >= 4000){
-      nknots <- 75
+      nknots <- 100
       fit_control$lambda.min.ratio <- 1e-5
     } else if(n == 2500){
-      nknots <- 50
+      nknots <- 75
       fit_control$lambda.min.ratio <- 1e-4
     } else if(n == 1000){
-      nknots <- 30
+      nknots <- 50
       fit_control$lambda.min.ratio <- 1e-4
     } else if(n == 500){
       nknots <- 30
@@ -168,7 +168,7 @@ outs <- lapply(c( 3,5,8), function(const) {
 
     fit_control$parallel = TRUE
 
-    out <- run_sims(const,n,1000, fit_control = fit_control, formula_hal = ~ h(.) + h(.,A), num_knots = c(nknots,nknots), screen_basis = TRUE, gen_fun = get_data_generator_nonlinear, lrnr_pi = Lrnr_gam$new(),
+    out <- run_sims(const,n,5000, fit_control = fit_control, formula_hal = ~ h(.) + h(.,A), num_knots = c(nknots,nknots), screen_basis = TRUE, gen_fun = get_data_generator_nonlinear, lrnr_pi = Lrnr_gam$new(),
                     lrnr_g = Lrnr_hal9001$new(formula = ~h(.)  , fit_control = fit_control, smoothness_orders = 1, max_degree =1, num_knots = c(nknots, 1)), nboots=2)
 
     out_list[[as.character(const)]][[as.character(n)]] <<- out
