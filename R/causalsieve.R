@@ -416,9 +416,10 @@ causalsieve <- R6::R6Class(
         }
         bootstrap_estimate <- theta_functional(X=X,A=A,g= g_fun)
 
+        return(rep(NA, length(private$.estimates[[name]]$name)))
         return(bootstrap_estimate)
       })
-        return(NA)
+        return(rep(NA, length(private$.estimates[[name]]$name)))
       })
       bootstrap_estimates <- na.omit(as.matrix(bootstrap_estimates))
 
@@ -428,8 +429,10 @@ causalsieve <- R6::R6Class(
 
 
 
-      se_boot <- sqrt(diag(as.matrix(var(bootstrap_estimates))))
-
+      se_boot <- sqrt(diag(as.matrix(var(bootstrap_estimates,na.rm=T))))
+      if(is.na(se_boot) || length(se_boot) == 0) {
+        se_boot <- 1000
+      }
       private$.estimates[[name]]$se_boot <- se_boot
       #private$.estimates[[name]]$CI_boot <- CI_boot
       return(list(bootstrap_estimates = bootstrap_estimates, se = se_boot))

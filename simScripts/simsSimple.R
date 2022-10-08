@@ -31,16 +31,16 @@ run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.)
       fit_hal_g_params$formula <- formula_hal
       fit_hal_g_params$max_degree <- max_degree
 
-      print("k1")
+
       g_basis_gen <-make_g_basis_generator_HAL(X,A,Y,  fit_hal_g_params = fit_hal_g_params,  screen_basis = screen_basis, relaxed_fit = FALSE, weight_screen_by_alpha = weight_screen_by_alpha)
-      print("k2")
+
       # weights <- g_basis_gen$weights
       #g_basis_gen <- g_basis_gen$g_basis
       g_basis_gen_relaxed <-make_g_basis_generator_HAL(X,A,Y,  fit_hal_g_params = fit_hal_g_params, screen_basis = screen_basis, relaxed_fit = TRUE, weight_screen_by_alpha = weight_screen_by_alpha)
       #g_basis_gen_relaxed <- g_basis_gen_relaxed$g_basis
       #print(quantile(weights))
       ATE <- datam_list$ATE
-      print("OK")
+
       causal_sieve <- causalsieve$new(X, A, Y, g_basis_gen, nboots = nboots, weights = NULL)
       causal_sieve$add_target_parameter(g(A=1,X=X) - g(A=0,X=X) ~ 1, name = "ATE")
       causal_sieve$estimate()
@@ -50,7 +50,11 @@ run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.)
       CI_IF_df <- do.call(rbind, lapply(causal_sieve$estimates, `[[`, "CI"))
       causal_sieve$confint(include_se_df_correction = FALSE)
       CI_IF <- do.call(rbind, lapply(causal_sieve$estimates, `[[`, "CI"))
+
       CI_boot <- do.call(rbind, lapply(causal_sieve$estimates, `[[`, "CI_boot"))
+
+      print(CI_boot)
+      print(CI_IF)
       out <- cbind(t(as.data.table(c(iter, name))), t(as.data.table(as.numeric(c(estimates, CI_IF, CI_IF_df, CI_boot)))))
       colnames(out) <- c("iter", "name", "estimate", "CI_left", "CI_right", "CI_df_left", "CI_df_right", "CI_boot_left", "CI_boot_right")
 
