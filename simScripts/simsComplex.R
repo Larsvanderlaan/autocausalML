@@ -164,7 +164,7 @@ outs <- lapply(c( 3,5,8), function(const) {
       nknots <- 30
       fit_control$lambda.min.ratio <- 1e-4
     }
-    nknots <- 20
+
 
     fit_control$parallel = TRUE
 

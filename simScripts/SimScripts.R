@@ -29,7 +29,7 @@ run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.)
       fit_hal_g_params$smoothness_orders <- smoothness_orders
       fit_hal_g_params$formula <- formula_hal
       fit_hal_g_params$max_degree <- max_degree
-
+      fit_control$parallel = TRUE
 
       g_basis_gen <-make_g_basis_generator_HAL(X,A,Y,  fit_hal_g_params = fit_hal_g_params,  screen_basis = screen_basis, relaxed_fit = FALSE, weight_screen_by_alpha = weight_screen_by_alpha)
 
