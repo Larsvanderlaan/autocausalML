@@ -23,6 +23,7 @@ run_sims_CATE <- function(const, n, nsims,   nboots = 2) {
       A <- datam_list$A
       Y <- datam_list$Y
       screen_basis <- T
+      fit_control <- list()
       fit_control$foldid <- (sample(1:n,n, replace= FALSE) %% 10) + 1
       fit_hal_g_params$fit_control <- fit_control
       fit_hal_g_params$num_knots <- c(20,20)
