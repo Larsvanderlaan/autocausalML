@@ -22,7 +22,8 @@ Imports:
   future,
   fda,
   earth,
-  fastglm
+  fastglm,
+  doMC
 Depends:
   sl3,
   SuperLearner,
@@ -36,7 +37,8 @@ Depends:
   xgboost,
   fda,
   earth,
-  fastglm
+  fastglm,
+  doMC
 Suggests:
   glmnet,
   hal9001,
