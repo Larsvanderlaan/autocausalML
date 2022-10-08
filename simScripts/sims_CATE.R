@@ -23,7 +23,15 @@ run_sims_CATE <- function(const, n, nsims,   nboots = 2) {
       A <- datam_list$A
       Y <- datam_list$Y
       screen_basis <- T
-      g_basis_gen <-make_g_basis_generator_HAL(X,A,Y, formula_hal = ~ h(.) + h(.,A), smoothness_orders=1, num_knots = c(20, 20), max_degree = 2, screen_basis = screen_basis)
+      fit_control$foldid <- (sample(1:n,n, replace= FALSE) %% 10) + 1
+      fit_hal_g_params$fit_control <- fit_control
+      fit_hal_g_params$num_knots <- c(20,20)
+      fit_hal_g_params$smoothness_orders <- 1
+      fit_hal_g_params$formula <- ~ h(.) + h(.,A)
+      fit_hal_g_params$max_degree <- 2
+      fit_control$parallel = TRUE
+
+      g_basis_gen <-make_g_basis_generator_HAL(X,A,Y,  fit_hal_g_params = fit_hal_g_params,  screen_basis = T, relaxed_fit = T, weight_screen_by_alpha = F)
       print(dim(g_basis_gen(X=X,A=A)))
       ATE <- datam_list$ATE
       causal_sieve <- causalsieve$new(X, A, Y, g_basis_gen, nboots = nboots)
@@ -42,7 +50,15 @@ run_sims_CATE <- function(const, n, nsims,   nboots = 2) {
 
 
 
-      g_basis_gen <-make_g_basis_generator_HAL(X,A,Y, formula_hal = ~ h(.) + h(.,A , k =1), smoothness_orders=1,  num_knots = c(20, 1), max_degree = 2, screen_basis = screen_basis)
+      fit_hal_g_params$fit_control <- fit_control
+      fit_hal_g_params$num_knots <- c(20,1)
+      fit_hal_g_params$smoothness_orders <- 1
+      fit_hal_g_params$formula <- ~ h(.) + h(.,A , k =1)
+      fit_hal_g_params$max_degree <- 2
+      fit_control$parallel = TRUE
+
+      g_basis_gen <-make_g_basis_generator_HAL(X,A,Y,  fit_hal_g_params = fit_hal_g_params,  screen_basis = T, relaxed_fit = T, weight_screen_by_alpha = F)
+
       print(dim(g_basis_gen(X=X,A=A)))
       ATE <- datam_list$ATE
       causal_sieve <- causalsieve$new(X, A, Y, g_basis_gen, nboots = nboots)
