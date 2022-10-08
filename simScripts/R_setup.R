@@ -1,5 +1,5 @@
 .libPaths( c( .libPaths(), "~/Rlibs2") )
-setwd("~/sieve")
+setwd("~/sieveSims")
 print(getwd())
 nsims = 5000
 library(autocausalML)
