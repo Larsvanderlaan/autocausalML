@@ -4,7 +4,7 @@ library(data.table)
 library(sl3)
 library(doParallel)
 library(hal9001)
-registerDoParallel(11)
+#registerDoParallel(11)
 
 
 run_sims_CATE <- function(const, n, nsims,   nboots = 2) {
