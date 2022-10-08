@@ -1,8 +1,8 @@
 .libPaths( c( .libPaths(), "~/Rlibs2") )
-setwd("~/LRRsims")
+setwd("~/sieve")
 print(getwd())
 nsims = 5000
-library(npcausalML)
+library(autocausalML)
 #library(future)
 #plan(multisession, workers = 16)
 

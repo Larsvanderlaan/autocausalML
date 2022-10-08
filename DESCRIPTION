@@ -10,3 +10,32 @@ License: What license is it under?
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.2
+Imports: 
+  sl3,
+  SuperLearner,
+  stats,
+  data.table,
+  R6,
+  stringr,
+  origami,
+  delayed,
+  future,
+  fda,
+  earth
+Depends:
+  sl3,
+  SuperLearner,
+  stats,
+  data.table,
+  R6,
+  stringr,
+  origami,
+  delayed,
+  future,
+  xgboost,
+  fda,
+  earth
+Suggests:
+  glmnet,
+  hal9001,
+  xgboost
