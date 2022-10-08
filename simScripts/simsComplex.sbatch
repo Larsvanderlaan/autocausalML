@@ -11,4 +11,4 @@
 echo "LOADING R"
 module load R
 echo "R LOADED"
-Rscript -e 'source("R_setup.R"); source("~/sieveSims/simScripts/simsComplex.R")'
+Rscript -e 'source("R_setup.R"); source("~/sieveSims/simsComplex.R")'
