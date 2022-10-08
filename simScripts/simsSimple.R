@@ -3,6 +3,7 @@ library(autocausalML)
 library(data.table)
 library(sl3)
 library(doParallel)
+library(hal9001)
 #registerDoParallel(11)
 
 run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.) + h(.,A), num_knots = c(1,1), smoothness_orders = 1, max_degree = 2,screen_basis = F, gen_fun, lrnr_pi = Lrnr_glmnet$new(), lrnr_g = Lrnr_glmnet$new(formula = ~ . + A * .),nboots = 500, relaxed_fit = TRUE, weight_screen_by_alpha = FALSE) {
@@ -30,9 +31,9 @@ run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.)
       fit_hal_g_params$formula <- formula_hal
       fit_hal_g_params$max_degree <- max_degree
 
-
+      print("k1")
       g_basis_gen <-make_g_basis_generator_HAL(X,A,Y,  fit_hal_g_params = fit_hal_g_params,  screen_basis = screen_basis, relaxed_fit = FALSE, weight_screen_by_alpha = weight_screen_by_alpha)
-
+      print("k2")
       # weights <- g_basis_gen$weights
       #g_basis_gen <- g_basis_gen$g_basis
       g_basis_gen_relaxed <-make_g_basis_generator_HAL(X,A,Y,  fit_hal_g_params = fit_hal_g_params, screen_basis = screen_basis, relaxed_fit = TRUE, weight_screen_by_alpha = weight_screen_by_alpha)
@@ -68,7 +69,7 @@ run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.)
       out2 <- cbind(t(as.data.table(c(iter, name))), t(as.data.table(as.numeric(c(estimates, CI_IF, CI_IF_df, CI_boot)))))
       colnames(out2) <- c("iter", "name", "estimate_relaxed", "CI_left_relaxed", "CI_right_relaxed", "CI_df_left_relaxed", "CI_df_right_relaxed", "CI_boot_left_relaxed", "CI_boot_right_relaxed")
 
-
+      print("Here")
       data <- as.data.frame(cbind(X,A,Y))
       g_ests <- compute_g(data, lrnr_g = lrnr_g)
       g1 <- g_ests$g1
@@ -148,7 +149,7 @@ outs <- lapply(c(  3,5, 8), function(const) {
   out_list[[as.character(const)]] <<-  list()
   lapply(rev(c(   500, 1000,  2500 ,5000 )) ,function(n) {
 
-    out <- run_sims(const,n,5000,  formula_hal = ~ h(.) + h(.,A) , num_knots = c(20,20), relaxed_fit = TRUE, screen_basis = TRUE, gen_fun = get_data_generator_linear, lrnr_pi = Lrnr_gam$new(), lrnr_g = Lrnr_hal9001$new(formula = ~h(.)  , smoothness_orders = 1, max_degree =2, num_knots = c(20)), nboots=2)
+    out <- run_sims(const,n,5000,  formula_hal = ~ h(.) + h(.,A) , num_knots = c(20,20), relaxed_fit = TRUE, screen_basis = TRUE, gen_fun = get_data_generator_linear, lrnr_pi = Lrnr_gam$new(), lrnr_g = Lrnr_hal9001$new(formula = ~ h(.)  , smoothness_orders = 1, max_degree =2, num_knots = c(20)), nboots=2)
 
     out_list[[as.character(const)]][[as.character(n)]] <<- out
     out2 <- rbindlist(unlist(out_list, recursive = F))
