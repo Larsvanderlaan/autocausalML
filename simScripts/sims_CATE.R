@@ -1,10 +1,10 @@
+
 library(autocausalML)
 library(data.table)
 library(sl3)
-library(doParallel)
+library(doMC)
 library(hal9001)
-registerDoParallel(11)
-
+doMC::registerDoMC(11)
 
 run_sims_CATE <- function(const, n, nsims,   nboots = 2) {
   screen_basis = TRUE
