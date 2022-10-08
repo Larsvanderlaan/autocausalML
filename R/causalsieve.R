@@ -109,7 +109,7 @@ causalsieve <- R6::R6Class(
           return(colMeans(as.matrix(m_A_X_g )))
         }
         V <- model.matrix(formula_msm, as.data.frame(X))
-        msm.fit <- fastglm::fastglm(V, m_A_X_g, family = gaussian(), intercept = FALSE)
+        msm.fit <- glm.fit(V, m_A_X_g, family = gaussian(), intercept = FALSE)
         beta <- coef(msm.fit)
         return(beta)
       }
@@ -125,7 +125,7 @@ causalsieve <- R6::R6Class(
 
         V <- model.matrix(formula_msm, as.data.frame(X))
 
-        msm.fit <- fastglm::fastglm(V, m_A_X_g, family = gaussian(), intercept = FALSE)
+        msm.fit <- glm.fit(V, m_A_X_g, family = gaussian(), intercept = FALSE)
         beta <- coef(msm.fit)
 
         m_A_V_g <-  as.vector(V %*% beta)
@@ -380,7 +380,7 @@ causalsieve <- R6::R6Class(
             A_boot <- A[boot_indices]
             Y_boot <- Y[boot_indices]
             g_basis_boot <- g_basis[boot_indices, , drop = F]
-            sieve_MLE_boot <- fastglm::fastglm(g_basis_boot, Y_boot, family = gaussian(), weights = self$weights)
+            sieve_MLE_boot <- glm.fit(g_basis_boot, Y_boot, family = gaussian(), weights = self$weights)
             beta_n_boot <- coef(sieve_MLE_boot)
             beta_n_boot[is.na(beta_n_boot)] <- 0
             #g_n_boot <- g_basis_boot %*% beta_n_boot

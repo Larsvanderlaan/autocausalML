@@ -36,6 +36,7 @@
 ~%2Frepositories%2FmyCausalPackages%2FautocausalML%2FsimScripts%2FsimsCATE.sbatch="EE19CFB5"
 ~%2Frepositories%2FmyCausalPackages%2FautocausalML%2FsimScripts%2FsimsCATE.sbatch.sh="60669B65"
 ~%2Frepositories%2FmyCausalPackages%2FautocausalML%2FsimScripts%2FsimsCATE_gam.sbatch="232D8B64"
+~%2Frepositories%2FmyCausalPackages%2FautocausalML%2FsimScripts%2FsimsCATE_gam.sh="397F8EF6"
 ~%2Frepositories%2FmyCausalPackages%2FautocausalML%2FsimScripts%2FsimsComplex.R="74C1D1CD"
 ~%2Frepositories%2FmyCausalPackages%2FautocausalML%2FsimScripts%2FsimsComplex.sbatch="8AFAB36F"
 ~%2Frepositories%2FmyCausalPackages%2FautocausalML%2FsimScripts%2FsimsHighDim.R="6A28322C"
