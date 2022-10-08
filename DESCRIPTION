@@ -38,4 +38,5 @@ Depends:
 Suggests:
   glmnet,
   hal9001,
-  xgboost
+Remotes: github::tlverse/hal9001/tree/Larsvanderlaan-formula-patch, github::tlverse/sl3@Larsvanderlaan-formula_fix
+
