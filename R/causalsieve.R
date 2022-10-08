@@ -410,6 +410,7 @@ causalsieve <- R6::R6Class(
 
 
         coef_boot <- sieve_bootstrap_fits[[i]]$coef
+        coef_boot[is.na(coef_boot)] <- 0
         g_fun <- function(X,A) {
           g_basis_gen(X=X,A=A) %*% coef_boot
         }
