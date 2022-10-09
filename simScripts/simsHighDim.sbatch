@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --job-name Lars_sieve_%j        # Set a name for your job. This is especially useful if you have multiple jobs queued.
-#SBATCH --partition medium       # Slurm partition to use
+#SBATCH --partition long       # Slurm partition to use
 #SBATCH --ntasks 15            # Number of tasks to run. By default, one CPU core will be allocated per task
-#SBATCH --time 10-00:00          # Wall time limit in D-HH:MM
+#SBATCH --time 14-00:00          # Wall time limit in D-HH:MM
 #SBATCH --mem-per-cpu=10000       # Memory limit for each tasks (in MB)
 #SBATCH -o outfiles/sims_sieve_highDim.out      # File to which STDOUT will be written
 #SBATCH -e outfiles/sims_sieve_highDim.err      # File to which STDERR will be written

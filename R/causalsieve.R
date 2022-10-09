@@ -364,13 +364,15 @@ causalsieve <- R6::R6Class(
 
       g_basis_generator2 <- private$.args$g_basis_generator
       g_n <- as.vector(g_basis %*% coef)
+      g_n1 <- as.vector(g_basis_generator(X=X,A=1) %*% coef)
+      g_n0<- as.vector(g_basis_generator(X=X,A=0) %*% coef)
       #print(quantile(g_basis_generator2(X=X,A=1)%*% coef))
       #print(quantile(g_basis_generator2(X=X,A=0)%*% coef))
       if(!all(abs(colMeans( g_basis * (Y- g_n)) )<= 1e-8)) {
         warning("Sieve-MLE did not solve all scores. g_basis might be singular.")
       }
 
-      private$.regression_fit <- list(coef = coef, g_n = g_n, g_basis= g_basis, remove_basis = remove_basis )
+      private$.regression_fit <- list(coef = coef, g_n = g_n,g_n1 = g_n1, g_n0 = g_n0, g_basis= g_basis, remove_basis = remove_basis )
 
       if(compute_bootstrap_MLE) {
         estimates_boot <-  lapply(1:self$args$nboots, function(iter) {
@@ -476,9 +478,16 @@ make_g_basis_generator_HAL <- function(X, A, Y, fit_hal_g_params = list(formula 
   fit_hal_g_params$reduce_basis = 25/length(A)
   hal_fit <- sl3:::call_with_args( hal9001::fit_hal, fit_hal_g_params)
 
+  print(names(hal_fit))
+  print(names(hal_fit$lasso_fit))
+
   if(relaxed_fit) {
     lambda.min <- hal_fit$lasso_fit$relaxed$lambda.min
     coefs <- as.vector(coef(hal_fit$lasso_fit$glmnet.fit, s = lambda.min))
+    if((fit_hal_g_params$fit_control$cv_select == FALSE)) {
+      coefs <- as.vector(coef(hal_fit$lasso_fit, s = lambda.min))
+
+    }
    # print(hal_fit$lasso_fit$relaxed$lambda.min)
     #print(hal_fit$lambda_star)
   } else {
