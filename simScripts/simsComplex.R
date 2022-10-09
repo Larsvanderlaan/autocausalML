@@ -148,8 +148,7 @@ run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.)
 library(sl3)
 
 outs <- lapply(c( 3,5,8), function(const) {
-  out_list[[as.character(const)]] <<-  list()
-  lapply(rev (c(   500, 1000,  2500 ,4000 )) ,function(n) {
+   lapply(rev (c(   500, 1000,  2500 ,4000 )) ,function(n) {
     fit_control <- list()
     if(n >= 4000){
       nknots <- 50

@@ -129,8 +129,7 @@ run_sims_CATE <- function(const, n, nsims,   nboots = 2) {
 library(sl3)
 
 outs <- lapply(c(   4, 7,1), function(const) {
-  out_list[[as.character(const)]] <<-  list()
-  lapply(rev(c(   500, 1000,  2500, 5000   )) ,function(n) {
+   lapply(rev(c(   500, 1000,  2500, 5000   )) ,function(n) {
 
     out <- run_sims_CATE(const,n,5000)
 
@@ -138,7 +137,7 @@ outs <- lapply(c(   4, 7,1), function(const) {
     fwrite(out, file = paste0("SimsHALCATE_", const,"_" ,n, ".csv"))
 
 
-    return(out)
+    return(NULL)
 
   })
 
