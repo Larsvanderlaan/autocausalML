@@ -53,8 +53,7 @@ run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.)
 
       CI_boot <- do.call(rbind, lapply(causal_sieve$estimates, `[[`, "CI_boot"))
 
-      print(CI_boot)
-      print(CI_IF)
+
       out <- cbind(t(as.data.table(c(iter, name))), t(as.data.table(as.numeric(c(estimates, CI_IF, CI_IF_df, CI_boot)))))
       colnames(out) <- c("iter", "name", "estimate", "CI_left", "CI_right", "CI_df_left", "CI_df_right", "CI_boot_left", "CI_boot_right")
 
@@ -73,7 +72,7 @@ run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.)
       out2 <- cbind(t(as.data.table(c(iter, name))), t(as.data.table(as.numeric(c(estimates, CI_IF, CI_IF_df, CI_boot)))))
       colnames(out2) <- c("iter", "name", "estimate_relaxed", "CI_left_relaxed", "CI_right_relaxed", "CI_df_left_relaxed", "CI_df_right_relaxed", "CI_boot_left_relaxed", "CI_boot_right_relaxed")
 
-      print("Here")
+
       data <- as.data.frame(cbind(X,A,Y))
       g_ests <- compute_g(data, lrnr_g = lrnr_g)
       g1 <- g_ests$g1
@@ -100,37 +99,12 @@ run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.)
       out_full <- as.data.table(do.call(rbind, out_list))
 
 
-      print("sieve IF - df adjusted")
-      print( quantile(as.numeric(out_full$estimate)))
-
-      print(out_full[,mean(ATE >= CI_df_left & ATE <= CI_df_right), by = "name"][[2]])
-      print(out_full[, sd(estimate)])
-
-      print(out_full[, mean(as.numeric(estimate)-ATE)])
-      print(out_full[, mean(as.numeric(CI_df_right) - as.numeric(CI_df_left))])
-
-      print('RELAXED')
-      print( quantile(as.numeric(out_full$estimate_relaxed)))
-      print(out_full[,mean(ATE >= CI_df_left_relaxed & ATE <= CI_df_right_relaxed), by = "name"][[2]])
-      print(out_full[, sd(estimate_relaxed)])
-      print(out_full[, mean(as.numeric(estimate_relaxed)-ATE)])
-      print(out_full[, mean(as.numeric(CI_df_right_relaxed) - as.numeric(CI_df_left_relaxed))])
 
 
 
 
 
 
-
-      print("tmle")
-      print(    out_full[,mean(ATE >= CI_left_tmle & ATE <= CI_right_tmle), by = "name"][[2]]
-      )
-      print(out_full[, sd(estimate_tmle)])
-      print(out_full[, mean(as.numeric(CI_right_tmle) - as.numeric(CI_left_tmle))])
-      print("lm")
-      print(    out_full[,mean(ATE >= CI_left_lm & ATE <= CI_right_lm), by = "name"][[2]]
-      )
-      print(out_full[, mean(as.numeric(CI_right_lm) - as.numeric(CI_left_lm))])
 
       return(out)
     })

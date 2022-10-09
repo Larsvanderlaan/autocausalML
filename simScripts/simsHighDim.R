@@ -40,7 +40,7 @@ run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.)
       #g_basis_gen_relaxed <- g_basis_gen_relaxed$g_basis
       #print(quantile(weights))
       ATE <- datam_list$ATE
-      print("OK")
+
       causal_sieve <- causalsieve$new(X, A, Y, g_basis_gen, nboots = nboots, weights = NULL)
       causal_sieve$add_target_parameter(g(A=1,X=X) - g(A=0,X=X) ~ 1, name = "ATE")
       causal_sieve$estimate()
@@ -93,24 +93,6 @@ run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.)
           paste0(c("estimate", "CI_left", "CI_right"), "_lm"))
       )
       out_list[[iter]] <<- out
-      out_full <- as.data.table(do.call(rbind, out_list))
-
-
-      print("sieve IF - df adjusted")
-      print( quantile(as.numeric(out_full$estimate)))
-
-      print(out_full[,mean(ATE >= CI_df_left & ATE <= CI_df_right), by = "name"][[2]])
-      print(out_full[, sd(estimate)])
-
-      print(out_full[, mean(as.numeric(estimate)-ATE)])
-      print(out_full[, mean(as.numeric(CI_df_right) - as.numeric(CI_df_left))])
-
-      print('RELAXED')
-      print( quantile(as.numeric(out_full$estimate_relaxed)))
-      print(out_full[,mean(ATE >= CI_df_left_relaxed & ATE <= CI_df_right_relaxed), by = "name"][[2]])
-      print(out_full[, sd(estimate_relaxed)])
-      print(out_full[, mean(as.numeric(estimate_relaxed)-ATE)])
-      print(out_full[, mean(as.numeric(CI_df_right_relaxed) - as.numeric(CI_df_left_relaxed))])
 
 
 
@@ -118,15 +100,6 @@ run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.)
 
 
 
-      print("tmle")
-      print(    out_full[,mean(ATE >= CI_left_tmle & ATE <= CI_right_tmle), by = "name"][[2]]
-      )
-      print(out_full[, sd(estimate_tmle)])
-      print(out_full[, mean(as.numeric(CI_right_tmle) - as.numeric(CI_left_tmle))])
-      print("lm")
-      print(    out_full[,mean(ATE >= CI_left_lm & ATE <= CI_right_lm), by = "name"][[2]]
-      )
-      print(out_full[, mean(as.numeric(CI_right_lm) - as.numeric(CI_left_lm))])
 
       return(out)
     })

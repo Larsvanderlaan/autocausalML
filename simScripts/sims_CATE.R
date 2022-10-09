@@ -97,18 +97,6 @@ run_sims_CATE <- function(const, n, nsims,   nboots = 2) {
 
 
       out_list[[iter]] <<- out
-      out_full <- as.data.table(do.call(rbind, out_list))
-
-
-       print("sieve IF - df adjusted")
-      print(out_full[,mean(ATE >= CI_df_left & ATE <= CI_df_right), by = "name"][[2]])
-      print(out_full[,mean(ATE >= CI_df_left_sp & ATE <= CI_df_right_sp), by = "name"][[2]])
-      print(out_full[,mean(ATE >= CI_left_npglm & ATE <= CI_right_npglm), by = "name"][[2]])
-      print(out_full[,mean(ATE >= CI_left_spglm & ATE <= CI_right_spglm), by = "name"][[2]])
-      print(out_full[, sd(estimate), by = "name" ][[2]])
-      print(out_full[, sd(estimate_sp), by = "name" ][[2]])
-      print(out_full[, sd(estimate_npglm), by = "name" ][[2]])
-      print(out_full[, sd(estimate_spglm), by = "name" ][[2]])
 
       return(out)
     })
