@@ -143,15 +143,15 @@ run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.)
 
 ### SMALL SAMPLE
 
-out_list <- list()
+
 outs <- lapply(c(    4, 7,1), function(const) {
   out_list[[as.character(const)]] <<-  list()
   lapply(rev(c(  50, 100, 150, 200,  300 , 500)) ,function(n) {
 
     out <- run_sims(const,n,5000,  formula_hal = ~ h(.) + h(.,A), num_knots = c(1,1), screen_basis = TRUE, gen_fun = get_data_generator_linear_smallsample, lrnr_pi = Lrnr_glmnet$new(), lrnr_g =Lrnr_glmnet$new(), nboots=5000)
 
-    out_list[[as.character(const)]][[as.character(n)]] <<- out
-    out2 <- rbindlist(unlist(out_list, recursive = F))
+      fwrite(out, file = paste0("smallSamplesHAL_", const,"_" ,n, ".csv"))
+
    # fwrite(out2, file = "SimpleParametricHALSmallSamples3.csv")
     return(out)
 

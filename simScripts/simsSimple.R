@@ -147,7 +147,7 @@ run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.)
 
 ### SIMPLE
 
-out_list <- list()
+
 
 outs <- lapply(c(  3,5, 8), function(const) {
   out_list[[as.character(const)]] <<-  list()
@@ -155,9 +155,9 @@ outs <- lapply(c(  3,5, 8), function(const) {
 
     out <- run_sims(const,n,5000,  formula_hal = ~ h(.) + h(.,A) , num_knots = c(20,20), relaxed_fit = TRUE, screen_basis = TRUE, gen_fun = get_data_generator_linear, lrnr_pi = Lrnr_gam$new(), lrnr_g = Lrnr_hal9001$new(formula = ~ h(.)  , smoothness_orders = 1, max_degree =2, num_knots = c(20)), nboots=2)
 
-    out_list[[as.character(const)]][[as.character(n)]] <<- out
-    out2 <- rbindlist(unlist(out_list, recursive = F))
-   fwrite(out2, file = "SimpleParametricHAL_WithRelaxed.csv")
+
+    fwrite(out, file = paste0("SimpleParametricHAL_", const,"_" ,n, ".csv"))
+
     return(out)
 
   })
