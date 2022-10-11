@@ -1,5 +1,5 @@
 
-library(autocausalML)
+
 library(data.table)
 library(sl3)
 library(doMC)
@@ -39,15 +39,19 @@ run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.)
   hal_fit <- sl3:::call_with_args( hal9001::fit_hal, fit_hal_g_params)
   lambda <- hal_fit$lambda_star
   fit_hal_g_params$lambda <- lambda
-  fit_hal_g_params$fit_control$cv_select = F
-  fit_hal_g_params$fit_control$parallel = F
+  fit_hal_g_params$fit_control$cv_select = TRUE
+  fit_hal_g_params$fit_control$parallel = TRUE
 
   fit_hal_g_params_relaxed <- fit_hal_g_params
-
+  fit_hal_g_params_relaxed$lambda <- NULL
   fit_hal_g_params_relaxed$fit_control$relax <- TRUE
   hal_fit <- sl3:::call_with_args( hal9001::fit_hal, fit_hal_g_params_relaxed)
   lambda_relaxed <- hal_fit$lasso_fit$relaxed$lambda.min
-  fit_hal_g_params_relaxed$lambda_relaxed <- lambda_relaxed
+
+  fit_hal_g_params_relaxed$lambda <- lambda_relaxed
+
+  fit_hal_g_params$fit_control$cv_select = FALSE
+  fit_hal_g_params_relaxed$fit_control$cv_select = FALSE
 
 
   out <- lapply(1:nsims, function(iter) {
@@ -168,7 +172,7 @@ run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.)
 
 
 outs <- lapply(c(  3,5, 8), function(const) {
-   lapply(rev(c(   500, 1000,  2500 ,5000 )) ,function(n) {
+   lapply( (c(   500, 1000,  2500 ,5000 )) ,function(n) {
     nsims <- 5000
 
     out <- run_sims(const,n,nsims,  formula_hal = ~ h(.) + h(.,A) , num_knots = c(20,20), relaxed_fit = TRUE, screen_basis = TRUE, gen_fun = get_data_generator_linear, lrnr_pi = Lrnr_gam$new(), lrnr_g = Lrnr_hal9001$new(formula = ~ h(.)  , smoothness_orders = 1, max_degree =2, num_knots = c(20)), nboots=2)

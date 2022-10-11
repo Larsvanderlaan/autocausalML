@@ -39,15 +39,20 @@ run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.)
   hal_fit <- sl3:::call_with_args( hal9001::fit_hal, fit_hal_g_params)
   lambda <- hal_fit$lambda_star
   fit_hal_g_params$lambda <- lambda
-  fit_hal_g_params$fit_control$cv_select = F
-  fit_hal_g_params$fit_control$parallel = F
+  fit_hal_g_params$fit_control$cv_select = TRUE
+  fit_hal_g_params$fit_control$parallel = TRUE
 
   fit_hal_g_params_relaxed <- fit_hal_g_params
-
+  fit_hal_g_params_relaxed$lambda <- NULL
   fit_hal_g_params_relaxed$fit_control$relax <- TRUE
   hal_fit <- sl3:::call_with_args( hal9001::fit_hal, fit_hal_g_params_relaxed)
   lambda_relaxed <- hal_fit$lasso_fit$relaxed$lambda.min
-  fit_hal_g_params_relaxed$lambda_relaxed <- lambda_relaxed
+
+  fit_hal_g_params_relaxed$lambda <- lambda_relaxed
+
+  fit_hal_g_params$fit_control$cv_select = FALSE
+  fit_hal_g_params_relaxed$fit_control$cv_select = FALSE
+
 
 
   out <- lapply(1:nsims, function(iter) {
@@ -80,6 +85,7 @@ run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.)
       #print(quantile(weights))
       ATE <- datam_list$ATE
 
+
       causal_sieve <- causalsieve$new(X, A, Y, g_basis_gen, nboots = nboots, weights = NULL)
       causal_sieve$add_target_parameter(g(A=1,X=X) - g(A=0,X=X) ~ 1, name = "ATE")
       causal_sieve$estimate()
@@ -96,13 +102,13 @@ run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.)
       out <- cbind(t(as.data.table(c(iter, name))), t(as.data.table(as.numeric(c(estimates, CI_IF, CI_IF_df, CI_boot)))))
       colnames(out) <- c("iter", "name", "estimate", "CI_left", "CI_right", "CI_df_left", "CI_df_right", "CI_boot_left", "CI_boot_right")
 
-
+      print("HERE")
       # RELAXED
       causal_sieve <- causalsieve$new(X, A, Y, g_basis_gen_relaxed, nboots = nboots, weights = NULL)
       causal_sieve$add_target_parameter(g(A=1,X=X) - g(A=0,X=X) ~ 1, name = "ATE")
       causal_sieve$estimate()
       name <- unlist(sapply(causal_sieve$estimates, `[[`, "name"))
-
+      print("HERE")
       estimates <- unlist(sapply(causal_sieve$estimates, `[[`, "estimate"))
       CI_IF_df <- do.call(rbind, lapply(causal_sieve$estimates, `[[`, "CI"))
       causal_sieve$confint(include_se_df_correction = FALSE)
@@ -110,7 +116,7 @@ run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.)
       CI_boot <- do.call(rbind, lapply(causal_sieve$estimates, `[[`, "CI_boot"))
       out2 <- cbind(t(as.data.table(c(iter, name))), t(as.data.table(as.numeric(c(estimates, CI_IF, CI_IF_df, CI_boot)))))
       colnames(out2) <- c("iter", "name", "estimate_relaxed", "CI_left_relaxed", "CI_right_relaxed", "CI_df_left_relaxed", "CI_df_right_relaxed", "CI_boot_left_relaxed", "CI_boot_right_relaxed")
-      print("HERE")
+
 
       g1 <- causal_sieve$regression_fit$g_n1
       g0 <- causal_sieve$regression_fit$g_n0
@@ -119,6 +125,7 @@ run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.)
       # g_ests <- compute_g(data, lrnr_g = lrnr_g)
       # g1 <- g_ests$g1
       #g0 <- g_ests$g0
+
       pi <-compute_pi(as.data.frame(cbind(X,A,Y)), lrnr_pi = lrnr_pi)
       tmle <- compute_TMLE (data, pi, g1, g0,level = 0.05)
       aipw <- compute_AIPW (data, pi, g1, g0,level = 0.05)

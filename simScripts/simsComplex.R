@@ -39,15 +39,20 @@ run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.)
   hal_fit <- sl3:::call_with_args( hal9001::fit_hal, fit_hal_g_params)
   lambda <- hal_fit$lambda_star
   fit_hal_g_params$lambda <- lambda
-  fit_hal_g_params$fit_control$cv_select = F
-  fit_hal_g_params$fit_control$parallel = F
+  fit_hal_g_params$fit_control$cv_select = TRUE
+  fit_hal_g_params$fit_control$parallel = TRUE
 
   fit_hal_g_params_relaxed <- fit_hal_g_params
-
+  fit_hal_g_params_relaxed$lambda <- NULL
   fit_hal_g_params_relaxed$fit_control$relax <- TRUE
   hal_fit <- sl3:::call_with_args( hal9001::fit_hal, fit_hal_g_params_relaxed)
   lambda_relaxed <- hal_fit$lasso_fit$relaxed$lambda.min
-  fit_hal_g_params_relaxed$lambda_relaxed <- lambda_relaxed
+
+  fit_hal_g_params_relaxed$lambda <- lambda_relaxed
+
+  fit_hal_g_params$fit_control$cv_select = FALSE
+  fit_hal_g_params_relaxed$fit_control$cv_select = FALSE
+
 
 
   out <- lapply(1:nsims, function(iter) {

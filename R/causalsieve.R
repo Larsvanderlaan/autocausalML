@@ -478,8 +478,7 @@ make_g_basis_generator_HAL <- function(X, A, Y, fit_hal_g_params = list(formula 
   fit_hal_g_params$reduce_basis = 25/length(A)
   hal_fit <- sl3:::call_with_args( hal9001::fit_hal, fit_hal_g_params)
 
-  print(names(hal_fit))
-  print(names(hal_fit$lasso_fit))
+
 
   if(relaxed_fit) {
     lambda.min <- hal_fit$lasso_fit$relaxed$lambda.min
@@ -513,7 +512,12 @@ make_g_basis_generator_HAL <- function(X, A, Y, fit_hal_g_params = list(formula 
 
 
   g_basis_generator <- function(A,X) {
+
     V <- as.matrix(cbind(X,A))
+
+
+
+    head(make_design_matrix(V, basis_list_reduced, 0.9))
     g_basis <- as.matrix(make_design_matrix(V, basis_list_reduced, 0.9))
 
     return(g_basis)
