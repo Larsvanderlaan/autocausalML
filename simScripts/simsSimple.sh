@@ -7,6 +7,6 @@ for n in 1000 500 1000 2500 5000
 do
   for const in 3 5 8
   do
-    sbatch  --export=n=$n,const=$const ~/sieveSims/simsComplex.sbatch
+    sbatch  --export=n=$n,const=$const ~/sieveSims/simsSimple.sbatch
   done
 done

@@ -160,25 +160,30 @@ run_sims_CATE <- function(const, n, nsims,   nboots = 2) {
 
 
 
+const <- as.numeric(const)
+n <- as.numeric(n)
+
+out <- run_sims_CATE(const,n,2500)
 
 
-
-library(sl3)
-
-outs <- lapply(c(   4, 7,1), function(const) {
-   lapply(rev(c(   500, 1000,  2500, 5000   )) ,function(n) {
-
-    out <- run_sims_CATE(const,n,2500)
+fwrite(out, file = paste0("SimsHALCATE_", const,"_" ,n, ".csv"))
 
 
-    fwrite(out, file = paste0("SimsHALCATE_", const,"_" ,n, ".csv"))
-
-
-    return(NULL)
-
-  })
-
-})
-
-
-
+#
+# outs <- lapply(c(   4, 7,1), function(const) {
+#    lapply(rev(c(   500, 1000,  2500, 5000   )) ,function(n) {
+#
+#     out <- run_sims_CATE(const,n,2500)
+#
+#
+#     fwrite(out, file = paste0("SimsHALCATE_", const,"_" ,n, ".csv"))
+#
+#
+#     return(NULL)
+#
+#   })
+#
+# })
+#
+#
+#
