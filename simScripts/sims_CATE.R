@@ -4,7 +4,7 @@ library(data.table)
 library(sl3)
 library(doMC)
 library(hal9001)
-doMC::registerDoMC(11)
+doMC::registerDoMC(3)
 
 run_sims_CATE <- function(const, n, nsims,   nboots = 2) {
   screen_basis = TRUE
