@@ -168,7 +168,7 @@ library(sl3)
 outs <- lapply(c(   4, 7,1), function(const) {
    lapply(rev(c(   500, 1000,  2500, 5000   )) ,function(n) {
 
-    out <- run_sims_CATE(const,n,5000)
+    out <- run_sims_CATE(const,n,2500)
 
 
     fwrite(out, file = paste0("SimsHALCATE_", const,"_" ,n, ".csv"))

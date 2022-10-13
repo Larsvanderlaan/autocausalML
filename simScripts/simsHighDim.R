@@ -178,7 +178,7 @@ run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.)
 outs <- lapply(c( 1,3,5), function(const) {
    lapply(rev(c(   250, 500, 1000, 2000  )) ,function(n) {
 
-    out <- run_sims(const,n,5000,  formula_hal = ~ h(.) + h(.,A), num_knots = c(1,1), screen_basis = TRUE, gen_fun = get_data_generator_linear_lasso, lrnr_pi = Lrnr_glmnet$new(), lrnr_g = Lrnr_hal9001$new(formula = ~h(.)  , fit_control = list(parallel = TRUE), smoothness_orders = 1, max_degree =1, num_knots = c(1)))
+    out <- run_sims(const,n,2500,  formula_hal = ~ h(.) + h(.,A), num_knots = c(1,1), screen_basis = TRUE, gen_fun = get_data_generator_linear_lasso, lrnr_pi = Lrnr_glmnet$new(), lrnr_g = Lrnr_hal9001$new(formula = ~h(.)  , fit_control = list(parallel = TRUE), smoothness_orders = 1, max_degree =1, num_knots = c(1)))
 
 
     fwrite(out, file = paste0("LassoHighDim_", const,"_" ,n, ".csv"))

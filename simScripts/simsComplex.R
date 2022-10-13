@@ -194,7 +194,7 @@ outs <- lapply(c( 3,5,8), function(const) {
 
     fit_control$parallel = TRUE
 
-    out <- run_sims(const,n,5000, fit_control = fit_control, formula_hal = ~ h(.) + h(.,A), num_knots = c(nknots,nknots), screen_basis = TRUE, gen_fun = get_data_generator_nonlinear, lrnr_pi = Lrnr_gam$new(),
+    out <- run_sims(const,n,2500, fit_control = fit_control, formula_hal = ~ h(.) + h(.,A), num_knots = c(nknots,nknots), screen_basis = TRUE, gen_fun = get_data_generator_nonlinear, lrnr_pi = Lrnr_gam$new(),
                     lrnr_g = Lrnr_hal9001$new(formula = ~h(.)  , fit_control = fit_control, smoothness_orders = 1, max_degree =1, num_knots = c(nknots, 1)), nboots=2)
 
     #out_list[[as.character(const)]][[as.character(n)]] <<- out

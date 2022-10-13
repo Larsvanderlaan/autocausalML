@@ -4,7 +4,7 @@ library(data.table)
 library(sl3)
 library(doMC)
 library(hal9001)
-doMC::registerDoMC(11)
+doMC::registerDoMC(1)
 
 run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.) + h(.,A), num_knots = c(1,1), smoothness_orders = 1, max_degree = 2,screen_basis = F, gen_fun, lrnr_pi = Lrnr_glmnet$new(), lrnr_g = Lrnr_glmnet$new(formula = ~ . + A * .),nboots = 500, relaxed_fit = TRUE, weight_screen_by_alpha = FALSE) {
 
@@ -175,7 +175,7 @@ run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.)
 outs <- lapply(c(    4, 7,1), function(const) {
    lapply(rev(c(  50, 100, 150, 200,  300 , 500)) ,function(n) {
 
-    out <- run_sims(const,n,5000,  formula_hal = ~ h(.) + h(.,A), num_knots = c(1,1), screen_basis = TRUE, gen_fun = get_data_generator_linear_smallsample, lrnr_pi = Lrnr_glmnet$new(), lrnr_g =Lrnr_glmnet$new(), nboots=5000)
+    out <- run_sims(const,n,2500,  formula_hal = ~ h(.) + h(.,A), num_knots = c(1,1), screen_basis = TRUE, gen_fun = get_data_generator_linear_smallsample, lrnr_pi = Lrnr_glmnet$new(), lrnr_g =Lrnr_glmnet$new(), nboots=5000)
 
       fwrite(out, file = paste0("smallSamplesHAL_", const,"_" ,n, ".csv"))
 
