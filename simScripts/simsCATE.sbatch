@@ -4,8 +4,8 @@
 #SBATCH --ntasks 15            # Number of tasks to run. By default, one CPU core will be allocated per task
 #SBATCH --time 14-00:00          # Wall time limit in D-HH:MM
 #SBATCH --mem-per-cpu=10000       # Memory limit for each tasks (in MB)
-#SBATCH -o outfiles/sims_sieve_cate.out      # File to which STDOUT will be written
-#SBATCH -e outfiles/sims_sieve_cate.err      # File to which STDERR will be written
+#SBATCH -o outfiles/sims_sieve_cate_%j.out      # File to which STDOUT will be written
+#SBATCH -e outfiles/sims_sieve_cate_%j.err      # File to which STDERR will be written
 #SBATCH --mail-type=NONE        # Type of email notification- NONE,BEGIN,END,FAIL,ALL
 #SBATCH --mail-user=lvdlaan@uw.edu # Email to which notifications will be sent
 echo "LOADING R"
