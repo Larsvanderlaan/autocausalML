@@ -34,14 +34,17 @@ run_sims_CATE <- function(const, n, nsims,   nboots = 2) {
   fit_hal_g_params$Y <- Y
   fit_hal_g_params$family = "gaussian"
   fit_hal_g_params$reduce_basis = 25/n
+  fit_hal_g_params_sp <- fit_hal_g_params
+
 
   hal_fit <- sl3:::call_with_args( hal9001::fit_hal, fit_hal_g_params)
   lambda <- hal_fit$lambda_star
   fit_hal_g_params$lambda <- lambda
   fit_hal_g_params$fit_control$cv_select = F
-  fit_hal_g_params$fit_control$parallel = F
+  fit_hal_g_params$fit_control$parallel = TRUE
 
-  fit_hal_g_params_sp <- fit_hal_g_params
+   fit_hal_g_params_sp$lambda <- NULL
+  fit_hal_g_params_sp$fit_control$cv_select = TRUE
   fit_hal_g_params_sp$num_knots <- c(20,1)
   fit_hal_g_params_sp$smoothness_orders <- 1
   fit_hal_g_params_sp$formula <- ~ h(.) + h(.,A , k =1)
@@ -50,6 +53,8 @@ run_sims_CATE <- function(const, n, nsims,   nboots = 2) {
   lambda <- hal_fit$lambda_star
   fit_hal_g_params_sp$lambda <- lambda
 
+  fit_hal_g_params_sp$fit_control$cv_select = FALSE
+  fit_hal_g_params_sp$fit_control$parallel = FALSE
 
 
   out <- lapply(1:nsims, function(iter) {
@@ -75,7 +80,7 @@ run_sims_CATE <- function(const, n, nsims,   nboots = 2) {
       # fit_control$parallel = TRUE
 
       g_basis_gen <-make_g_basis_generator_HAL(X,A,Y,  fit_hal_g_params = fit_hal_g_params,  screen_basis = T, relaxed_fit = T, weight_screen_by_alpha = F)
-      print(dim(g_basis_gen(X=X,A=A)))
+
       ATE <- datam_list$ATE
       causal_sieve <- causalsieve$new(X, A, Y, g_basis_gen, nboots = nboots)
       causal_sieve$add_target_parameter(g(A=1,X=X) - g(A=0,X=X) ~ 1 + W1 + W2 + W3 + W4, name = "CATE")
@@ -103,7 +108,7 @@ run_sims_CATE <- function(const, n, nsims,   nboots = 2) {
 
       g_basis_gen <-make_g_basis_generator_HAL(X,A,Y,  fit_hal_g_params = fit_hal_g_params_sp,  screen_basis = T, relaxed_fit = T, weight_screen_by_alpha = F)
 
-      print(dim(g_basis_gen(X=X,A=A)))
+
       ATE <- datam_list$ATE
       causal_sieve <- causalsieve$new(X, A, Y, g_basis_gen, nboots = nboots)
       causal_sieve$add_target_parameter(g(A=1,X=X) - g(A=0,X=X) ~ 1 + W1 + W2 + W3 + W4, name = "CATE")
@@ -136,7 +141,7 @@ run_sims_CATE <- function(const, n, nsims,   nboots = 2) {
       out_sp <- cbind(spglm[[1]], spglm[[3]][,1] , spglm[[3]][,2])
       #spglm <- causalglm::spglm(~ 1 + W1 + W2 + W3 + W4, data = as.data.frame(cbind(X,A,Y)), W = colnames(X), A = "A", Y = "Y", estimand = "CATE", sl3_Learner_A = Lrnr_glmnet$new(), sl3_Learner_Y =  Lrnr_hal9001$new(formula = ~ h(.), smoothness_orders = 1, max_degree = 1, num_knots = c(20, 1)), verbose = FALSE, append_interaction_matrix = F)
       colnames(out_sp) <- c("estimate_spglm", "CI_left_spglm", "CI_right_spglm")
-      print(out_sp)
+
        out <- cbind(out1, out2[,-c(1,2)], out_np, out_sp)
 
 

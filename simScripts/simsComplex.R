@@ -36,13 +36,15 @@ run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.)
   fit_hal_g_params$family = "gaussian"
   fit_hal_g_params$reduce_basis = 25/n
 
+  fit_hal_g_params_relaxed <- fit_hal_g_params
+
   hal_fit <- sl3:::call_with_args( hal9001::fit_hal, fit_hal_g_params)
   lambda <- hal_fit$lambda_star
   fit_hal_g_params$lambda <- lambda
   fit_hal_g_params$fit_control$cv_select = TRUE
   fit_hal_g_params$fit_control$parallel = TRUE
 
-  fit_hal_g_params_relaxed <- fit_hal_g_params
+
   fit_hal_g_params_relaxed$lambda <- NULL
   fit_hal_g_params_relaxed$fit_control$relax <- TRUE
   hal_fit <- sl3:::call_with_args( hal9001::fit_hal, fit_hal_g_params_relaxed)
