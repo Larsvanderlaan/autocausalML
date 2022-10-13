@@ -1,4 +1,4 @@
-
+#!/bin/usr/env bash
 filename="simsCATE_xgboost"
 nsims=2500
 export R_LIBS=~/Rlibs
