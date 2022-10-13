@@ -11,4 +11,4 @@
 echo "LOADING R"
 module load R
 echo "R LOADED"
-Rscript -e 'source("R_setup.R"); source("~/sieveSims/simsSimple.R")'
+Rscript -e 'source("R_setup.R"); n = Sys.getenv("n"); const = Sys.getenv("const");  source("~/sieveSims/simsSimple.R")'
