@@ -55,4 +55,6 @@
 ~%2Frepositories%2FmyCausalPackages%2FautocausalML%2FsimScripts%2Fsims_CATE.R="16469732"
 ~%2Frepositories%2FmyCausalPackages%2FautocausalML%2FsimScripts%2Ftemplate.sbatch="886F617A"
 ~%2Frepositories%2FmyCausalPackages%2FautocausalML%2FsimScripts%2Ftest.R="F5BC8F53"
+~%2Frepositories%2FmyCausalPackages%2FautocausalML%2FsimScripts%2FtestSims.sbatch="D3CA24D9"
+~%2Frepositories%2FmyCausalPackages%2FautocausalML%2FsimScripts%2FtestSims.sh="82D384DE"
 ~%2Frepositories%2FmyCausalPackages%2FautocausalML%2Fsims_CATE.R="74DE78EC"
