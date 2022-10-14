@@ -174,24 +174,24 @@ nsims <- 5000
 const <- as.numeric(const)
 n <- as.numeric(n)
 
-out <- run_sims(const,n,nsims,  formula_hal = ~ h(.) + h(.,A) , num_knots = c(20,20), relaxed_fit = TRUE, screen_basis = TRUE, gen_fun = get_data_generator_linear, lrnr_pi = Lrnr_gam$new(), lrnr_g = Lrnr_hal9001$new(formula = ~ h(.)  , smoothness_orders = 1, max_degree =2, num_knots = c(20)), nboots=2)
+# out <- run_sims(const,n,nsims,  formula_hal = ~ h(.) + h(.,A) , num_knots = c(20,20), relaxed_fit = TRUE, screen_basis = TRUE, gen_fun = get_data_generator_linear, lrnr_pi = Lrnr_gam$new(), lrnr_g = Lrnr_hal9001$new(formula = ~ h(.)  , smoothness_orders = 1, max_degree =2, num_knots = c(20)), nboots=2)
+#
+#
+# fwrite(out, file = paste0("SimpleParametricHAL_", const,"_" ,n, ".csv"))
 
 
-fwrite(out, file = paste0("SimpleParametricHAL_", const,"_" ,n, ".csv"))
+outs <- lapply(c(const), function(const) {
+   lapply( (c(  n)) ,function(n) {
+    nsims <- 5000
 
-#
-# outs <- lapply(c(  3,5, 8), function(const) {
-#    lapply( (c(   500, 1000,  2500 ,5000 )) ,function(n) {
-#     nsims <- 2500
-#
-#     out <- run_sims(const,n,nsims,  formula_hal = ~ h(.) + h(.,A) , num_knots = c(20,20), relaxed_fit = TRUE, screen_basis = TRUE, gen_fun = get_data_generator_linear, lrnr_pi = Lrnr_gam$new(), lrnr_g = Lrnr_hal9001$new(formula = ~ h(.)  , smoothness_orders = 1, max_degree =2, num_knots = c(20)), nboots=2)
-#
-#
-#     fwrite(out, file = paste0("SimpleParametricHAL_", const,"_" ,n, ".csv"))
-#
-#     return(NULL)
-#
-#   })
-#
-# })
+    out <- run_sims(const,n,nsims,  formula_hal = ~ h(.) + h(.,A) , num_knots = c(20,20), relaxed_fit = TRUE, screen_basis = TRUE, gen_fun = get_data_generator_linear, lrnr_pi = Lrnr_gam$new(), lrnr_g = Lrnr_hal9001$new(formula = ~ h(.)  , smoothness_orders = 1, max_degree =2, num_knots = c(20)), nboots=2)
+
+
+    fwrite(out, file = paste0("SimpleParametricHAL_", const,"_" ,n, ".csv"))
+
+    return(NULL)
+
+  })
+
+})
 
