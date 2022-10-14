@@ -23,7 +23,9 @@ Imports:
   fda,
   earth,
   fastglm,
-  doMC
+  doMC,
+  hal9001,
+  glmnet
 Depends:
   sl3,
   SuperLearner,
@@ -39,8 +41,5 @@ Depends:
   earth,
   fastglm,
   doMC
-Suggests:
-  glmnet,
-  hal9001,
 Remotes: github::tlverse/hal9001@Larsvanderlaan-formula-patch, github::tlverse/sl3@develVersionChangeLars
  
