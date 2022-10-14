@@ -42,5 +42,5 @@ Depends:
 Suggests:
   glmnet,
   hal9001,
-Remotes: github::tlverse/hal9001/tree/Larsvanderlaan-formula-patch, github::tlverse/sl3@develVersionChangeLars
+Remotes: github::tlverse/hal9001@Larsvanderlaan-formula-patch, github::tlverse/sl3@develVersionChangeLars
  
