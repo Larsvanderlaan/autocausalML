@@ -29,7 +29,7 @@ run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.)
   fit_hal_g_params$fit_control$relax <- FALSE
   fit_hal_g_params$fit_control$gamma <- 0
   #fit_hal_g_params$fit_control$weights <- weights
-  basis_formula <- formula_hal(fit_hal_g_params$formula, smoothness_orders = fit_hal_g_params$smoothness_orders, num_knots = fit_hal_g_params$num_knots, X = as.data.frame(cbind(X,A)) )$basis_list
+  basis_formula <- hal9001::formula_hal(fit_hal_g_params$formula, smoothness_orders = fit_hal_g_params$smoothness_orders, num_knots = fit_hal_g_params$num_knots, X = as.data.frame(cbind(X,A)) )$basis_list
   fit_hal_g_params$basis_list <- basis_formula
   fit_hal_g_params$X <- cbind(X,A)
   fit_hal_g_params$Y <- Y
