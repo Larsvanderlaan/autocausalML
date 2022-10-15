@@ -1,4 +1,5 @@
-.libPaths( c(  "~/Rlibs2") )
+.libPaths( c( .libPaths(), "~/Rlibs2") )
+print(.libPaths())
 setwd("~/sieveSims")
 print(getwd())
 nsims = 5000
