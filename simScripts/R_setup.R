@@ -2,7 +2,7 @@
 print(.libPaths())
 setwd("~/sieveSims")
 print(getwd())
-nsims = 5000
+nsims = 1000
 
 library(autocausalML)
 #library(future)

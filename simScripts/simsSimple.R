@@ -19,8 +19,8 @@ run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.)
   X <- datam_list$X
   A <- datam_list$A
   Y <- datam_list$Y
-  fit_control$parallel = F
-  fit_control$foldid <- (sample(1:n,n, replace= FALSE) %% 10) + 1
+  fit_control$parallel = TRUE
+  fit_control$foldid <- (sample(1:n,n, replace= FALSE) %% 3) + 1
   fit_hal_g_params$fit_control <- fit_control
   fit_hal_g_params$num_knots <- num_knots
   fit_hal_g_params$smoothness_orders <- smoothness_orders
@@ -29,32 +29,25 @@ run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.)
   fit_hal_g_params$fit_control$relax <- FALSE
   fit_hal_g_params$fit_control$gamma <- 0
   #fit_hal_g_params$fit_control$weights <- weights
-  basis_formula <- hal9001::formula_hal(fit_hal_g_params$formula, smoothness_orders = fit_hal_g_params$smoothness_orders, num_knots = fit_hal_g_params$num_knots, X = as.data.frame(cbind(X,A)) )$basis_list
+  basis_formula <- formula_hal(fit_hal_g_params$formula, smoothness_orders = fit_hal_g_params$smoothness_orders, num_knots = fit_hal_g_params$num_knots, X = as.data.frame(cbind(X,A)) )$basis_list
   fit_hal_g_params$basis_list <- basis_formula
   fit_hal_g_params$X <- cbind(X,A)
   fit_hal_g_params$Y <- Y
   fit_hal_g_params$family = "gaussian"
   fit_hal_g_params$reduce_basis = 25/n
 
-  fit_hal_g_params_relaxed <- fit_hal_g_params
+  # fit_hal_g_params_relaxed <- fit_hal_g_params
 
-  hal_fit <- sl3:::call_with_args( hal9001::fit_hal, fit_hal_g_params)
-  lambda <- hal_fit$lambda_star
-  fit_hal_g_params$lambda <- lambda
+  # hal_fit <- sl3:::call_with_args( hal9001::fit_hal, fit_hal_g_params)
+  # lambda <- hal_fit$lambda_star
+  # fit_hal_g_params$lambda <- lambda
   fit_hal_g_params$fit_control$cv_select = TRUE
-  fit_hal_g_params$fit_control$parallel = F
+  fit_hal_g_params$fit_control$parallel = TRUE
+  fit_hal_g_params_relaxed <- fit_hal_g_params
 
 
   fit_hal_g_params_relaxed$lambda <- NULL
   fit_hal_g_params_relaxed$fit_control$relax <- TRUE
-  hal_fit <- sl3:::call_with_args( hal9001::fit_hal, fit_hal_g_params_relaxed)
-  lambda_relaxed <- hal_fit$lasso_fit$relaxed$lambda.min
-
-  fit_hal_g_params_relaxed$lambda <- lambda_relaxed
-
-  fit_hal_g_params$fit_control$cv_select = FALSE
-  fit_hal_g_params_relaxed$fit_control$cv_select = FALSE
-
 
   out <- lapply(1:nsims, function(iter) {
     try({
@@ -182,7 +175,7 @@ n <- as.numeric(n)
 
 outs <- lapply(c(const), function(const) {
    lapply( (c(  n)) ,function(n) {
-    nsims <- 5000
+
 
     out <- run_sims(const,n,nsims,  formula_hal = ~ h(.) + h(.,A) , num_knots = c(20,20), relaxed_fit = TRUE, screen_basis = TRUE, gen_fun = get_data_generator_linear, lrnr_pi = Lrnr_gam$new(), lrnr_g = Lrnr_hal9001$new(formula = ~ h(.)  , smoothness_orders = 1, max_degree =2, num_knots = c(20)), nboots=2)
 

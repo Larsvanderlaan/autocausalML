@@ -1,8 +1,25 @@
 
 
+name <- "SimsHALCATE"
+
+library(data.table)
+consts <- c(1,4,7)
+ns <- c(500, 1000, 2500, 5000)
+outs <- rbindlist(lapply(ns, function(n) {
+  items <- lapply(consts, function(const) {
+    fread(paste0("./simScripts/", name, "_",const,"_", n, ".csv"))
+  })
+
+  rbindlist(items)
+})
+)
+
+
+link <- name
+
+
 ATE <- 1
 library(data.table)
-outs <- fread("SimsHALCATE4_not1.csv")
 
 # outs$const[outs$const == 3] <- "overlap: 1e-06"
 # outs$const[outs$const == 5] <- "overlap: 1e-10"

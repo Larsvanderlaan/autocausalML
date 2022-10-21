@@ -20,7 +20,7 @@ run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.)
   A <- datam_list$A
   Y <- datam_list$Y
   fit_control$parallel = TRUE
-  fit_control$foldid <- (sample(1:n,n, replace= FALSE) %% 10) + 1
+  fit_control$foldid <- (sample(1:n,n, replace= FALSE) %% 3) + 1
   fit_hal_g_params$fit_control <- fit_control
   fit_hal_g_params$num_knots <- num_knots
   fit_hal_g_params$smoothness_orders <- smoothness_orders
@@ -36,24 +36,25 @@ run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.)
   fit_hal_g_params$family = "gaussian"
   fit_hal_g_params$reduce_basis = 25/n
 
-  fit_hal_g_params_relaxed <- fit_hal_g_params
+ # fit_hal_g_params_relaxed <- fit_hal_g_params
 
-  hal_fit <- sl3:::call_with_args( hal9001::fit_hal, fit_hal_g_params)
-  lambda <- hal_fit$lambda_star
-  fit_hal_g_params$lambda <- lambda
+  # hal_fit <- sl3:::call_with_args( hal9001::fit_hal, fit_hal_g_params)
+  # lambda <- hal_fit$lambda_star
+  # fit_hal_g_params$lambda <- lambda
   fit_hal_g_params$fit_control$cv_select = TRUE
   fit_hal_g_params$fit_control$parallel = TRUE
+  fit_hal_g_params_relaxed <- fit_hal_g_params
 
 
   fit_hal_g_params_relaxed$lambda <- NULL
   fit_hal_g_params_relaxed$fit_control$relax <- TRUE
-  hal_fit <- sl3:::call_with_args( hal9001::fit_hal, fit_hal_g_params_relaxed)
-  lambda_relaxed <- hal_fit$lasso_fit$relaxed$lambda.min
+  # hal_fit <- sl3:::call_with_args( hal9001::fit_hal, fit_hal_g_params_relaxed)
+  # lambda_relaxed <- hal_fit$lasso_fit$relaxed$lambda.min
 
-  fit_hal_g_params_relaxed$lambda <- lambda_relaxed
-
-  fit_hal_g_params$fit_control$cv_select = FALSE
-  fit_hal_g_params_relaxed$fit_control$cv_select = FALSE
+  # fit_hal_g_params_relaxed$lambda <- lambda_relaxed
+  #
+  # fit_hal_g_params$fit_control$cv_select = FALSE
+  # fit_hal_g_params_relaxed$fit_control$cv_select = FALSE
 
 
 
@@ -174,7 +175,7 @@ n <- as.numeric(n)
 
 
 ### HIGH DIM
-out <- run_sims(const,n,5000,  formula_hal = ~ h(.) + h(.,A), num_knots = c(1,1), screen_basis = TRUE, gen_fun = get_data_generator_linear_lasso, lrnr_pi = Lrnr_glmnet$new(), lrnr_g = Lrnr_hal9001$new(formula = ~h(.)  , fit_control = list(parallel = TRUE), smoothness_orders = 1, max_degree =1, num_knots = c(1)))
+out <- run_sims(const,n,nsims,  formula_hal = ~ h(.) + h(.,A), num_knots = c(1,1), screen_basis = TRUE, gen_fun = get_data_generator_linear_lasso, lrnr_pi = Lrnr_glmnet$new(), lrnr_g = Lrnr_hal9001$new(formula = ~h(.)  , fit_control = list(parallel = TRUE), smoothness_orders = 1, max_degree =1, num_knots = c(1)))
 
 
 fwrite(out, file = paste0("LassoHighDim_", const,"_" ,n, ".csv"))

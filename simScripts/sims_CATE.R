@@ -21,7 +21,7 @@ run_sims_CATE <- function(const, n, nsims,   nboots = 2) {
   fit_control$parallel = TRUE
   fit_control$alpha = TRUE
   fit_control$relax = TRUE
-  fit_control$foldid <- (sample(1:n,n, replace= FALSE) %% 10) + 1
+  fit_control$foldid <- (sample(1:n,n, replace= FALSE) %% 3) + 1
   fit_hal_g_params$num_knots <- c(20,20)
   fit_hal_g_params$smoothness_orders <- 1
   fit_hal_g_params$formula <- ~ h(.) + h(.,A)
@@ -34,27 +34,28 @@ run_sims_CATE <- function(const, n, nsims,   nboots = 2) {
   fit_hal_g_params$Y <- Y
   fit_hal_g_params$family = "gaussian"
   fit_hal_g_params$reduce_basis = 25/n
+
+
+  # hal_fit <- sl3:::call_with_args( hal9001::fit_hal, fit_hal_g_params)
+  # lambda <- hal_fit$lambda_star
+  # fit_hal_g_params$lambda <- lambda
+  fit_hal_g_params$fit_control$cv_select = T
+  fit_hal_g_params$fit_control$parallel = TRUE
   fit_hal_g_params_sp <- fit_hal_g_params
 
 
-  hal_fit <- sl3:::call_with_args( hal9001::fit_hal, fit_hal_g_params)
-  lambda <- hal_fit$lambda_star
-  fit_hal_g_params$lambda <- lambda
-  fit_hal_g_params$fit_control$cv_select = F
-  fit_hal_g_params$fit_control$parallel = TRUE
-
-   fit_hal_g_params_sp$lambda <- NULL
+  # fit_hal_g_params_sp$lambda <- NULL
   fit_hal_g_params_sp$fit_control$cv_select = TRUE
   fit_hal_g_params_sp$num_knots <- c(20,1)
   fit_hal_g_params_sp$smoothness_orders <- 1
   fit_hal_g_params_sp$formula <- ~ h(.) + h(.,A , k =1)
   fit_hal_g_params_sp$max_degree <- 2
-  hal_fit <- sl3:::call_with_args( hal9001::fit_hal, fit_hal_g_params_sp)
-  lambda <- hal_fit$lambda_star
-  fit_hal_g_params_sp$lambda <- lambda
+ # hal_fit <- sl3:::call_with_args( hal9001::fit_hal, fit_hal_g_params_sp)
+  #lambda <- hal_fit$lambda_star
+  #fit_hal_g_params_sp$lambda <- lambda
 
-  fit_hal_g_params_sp$fit_control$cv_select = FALSE
-  fit_hal_g_params_sp$fit_control$parallel = FALSE
+  fit_hal_g_params_sp$fit_control$cv_select = T
+  fit_hal_g_params_sp$fit_control$parallel = T
 
 
   out <- lapply(1:nsims, function(iter) {
@@ -163,7 +164,7 @@ run_sims_CATE <- function(const, n, nsims,   nboots = 2) {
 const <- as.numeric(const)
 n <- as.numeric(n)
 
-out <- run_sims_CATE(const,n,2500)
+out <- run_sims_CATE(const,n,nsims)
 
 
 fwrite(out, file = paste0("SimsHALCATE_", const,"_" ,n, ".csv"))

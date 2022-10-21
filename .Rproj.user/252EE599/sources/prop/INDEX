@@ -58,3 +58,6 @@
 ~%2Frepositories%2FmyCausalPackages%2FautocausalML%2FsimScripts%2FtestSims.sbatch="D3CA24D9"
 ~%2Frepositories%2FmyCausalPackages%2FautocausalML%2FsimScripts%2FtestSims.sh="82D384DE"
 ~%2Frepositories%2FmyCausalPackages%2FautocausalML%2Fsims_CATE.R="74DE78EC"
+~%2Frepositories%2FnpcausalML%2FBatchScripts%2FR_setup.R="F5D7ED99"
+~%2Frepositories%2FnpcausalML%2FBatchScripts%2FsimsCATE_gam_highdim.sbatch="E64D33BD"
+~%2Frepositories%2FnpcausalML%2FFinalSimulationCode%2FsimsCATE_gam_highdim.R="B4A66A49"

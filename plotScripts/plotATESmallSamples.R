@@ -1,16 +1,21 @@
 
 
+name <- "smallSamplesHAL"
 
- link <-  "SimPlotHALsmallSample2"
-
-
-ATE <- 1
 library(data.table)
+consts <- c(1,4,7)
+ns <- c(50, 100,150,  200, 300)
+outs <- rbindlist(lapply(ns, function(n) {
+  items <- lapply(consts, function(const) {
+    fread(paste0("./simScripts/", name, "_",const,"_", n, ".csv"))
+  })
 
- outs <- fread("SimpleParametricHALSmallSamples2.csv")
+  rbindlist(items)
+})
+)
 
 
-
+link <- name
 
 
  ATE <- 1

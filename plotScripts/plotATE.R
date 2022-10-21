@@ -1,29 +1,30 @@
 
+name <- "ComplexParametricHAL"
+name <- "LassoHighDim"
+#name <- "SimpleParametric"
+library(data.table)
+consts <- c(3,5,8)
+ns <- c(500,1000,2500,5000)
 
-links <- c("SimPlotHALcomplex",  "SimPlotLassoHighDim", "SimPlotHALsimple"
+
+consts <- c(1,3,5)
+ns <- c(250,500,1000,2000)
+outs <- rbindlist(lapply(ns, function(n) {
+  items <- lapply(consts, function(const) {
+   try({ fread(paste0("./simScripts/", name, "_",const,"_", n, ".csv"))
+  })})
+  items <- items[sapply(items, is.data.frame)]
+  rbindlist(items)
+  })
 )
 
-link <- links[3]
- ATE <- 1.811417
-ATE <- 1
-library(data.table)
-outs <- fread("ComplexParametricHAL4_3.csv")
-outs <- outs[!(const %in% c( 8))]
-print(table(outs$const))
-outs2 <- fread("ComplexParametricHAL4_85.csv")
- outs2 <- outs2[!(const %in% c( 5))]
-outs <- rbind(outs, outs2)
-print(table(outs$const))
-outs <-  fread("ComplexParametricHAL4_3.csv")
- # outs <- fread("SimpleParametricHAL2.csv")
-outs <- fread("SimpleParametricHAL_WithRelaxed.csv")
- #outs <- rbind(fread("LassoHighDim.csv"),fread("LassoHighDim2500.csv"))
 
-#outs <- fread("LassoHighDim_relaxed.csv")
-#outs <- fread("ComplexParametricHAL_relaxed.csv")
-# outs$const[outs$const == 3] <- "overlap: 1e-06"
-# outs$const[outs$const == 5] <- "overlap: 1e-10"
-# outs$const[outs$const == 8] <- "overlap: 1e-15"
+ link <- name
+
+ATE <- 1
+# ATE <- 1.811417
+
+
 
 outs$const[outs$const == 3] <- "overlap: 1e-05"
 outs$const[outs$const == 5] <- "overlap: 1e-08"
