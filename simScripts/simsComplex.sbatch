@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH --array=1
-#SBATCH --nodes=3
+#SBATCH --nodes=5
 #SBATCH --output=Rout/par-%J.out
 #SBATCH --error=Rout/par-%J.err
 #SBATCH --cpus-per-task=1
