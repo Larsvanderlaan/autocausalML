@@ -20,7 +20,7 @@ run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.)
   A <- datam_list$A
   Y <- datam_list$Y
   fit_control$parallel = TRUE
-  fit_control$foldid <- (sample(1:n,n, replace= FALSE) %% 3) + 1
+  fit_control$foldid <- (sample(1:n,n, replace= FALSE) %% 10) + 1
   fit_hal_g_params$fit_control <- fit_control
   fit_hal_g_params$num_knots <- num_knots
   fit_hal_g_params$smoothness_orders <- smoothness_orders

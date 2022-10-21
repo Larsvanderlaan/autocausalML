@@ -21,7 +21,7 @@ run_sims_CATE <- function(const, n, nsims,   nboots = 2) {
   fit_control$parallel = TRUE
   fit_control$alpha = TRUE
   fit_control$relax = TRUE
-  fit_control$foldid <- (sample(1:n,n, replace= FALSE) %% 3) + 1
+  fit_control$foldid <- (sample(1:n,n, replace= FALSE) %% 10) + 1
   fit_hal_g_params$num_knots <- c(20,20)
   fit_hal_g_params$smoothness_orders <- 1
   fit_hal_g_params$formula <- ~ h(.) + h(.,A)
