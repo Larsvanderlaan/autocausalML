@@ -1,0 +1,7 @@
+Downloading GitHub repo tlverse/hal9001@Larsvanderlaan-formula-patch
+Installing 10 packages: Rcpp, parallelly, digest, globals, future, stringi, future.apply, data.table, stringr, origami
+Warning in i.p(...) :
+  'lib = "/app/software/R/4.2.0-foss-2021b/lib/R/library"' is not writable
+Error: Failed to install 'hal9001' from GitHub:
+  unable to install packages
+Execution halted
