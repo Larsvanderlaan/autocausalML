@@ -1,7 +1,7 @@
 library(sl3)
 
 compute_pi <- function(data, lrnr_pi = Lrnr_glm$new(family = binomial())) {
-  task <- sl3_Task$new(data, covariates = grep( "^W", colnames(data), value = TRUE), outcome = "A")
+  task <- sl3_Task$new(data, covariates = grep( "^[WV]", colnames(data), value = TRUE), outcome = "A")
 
   lrnr_pi_trained <- lrnr_pi$train(task)
   pi <- lrnr_pi_trained$predict(task)
@@ -11,7 +11,7 @@ compute_pi <- function(data, lrnr_pi = Lrnr_glm$new(family = binomial())) {
 }
 
 compute_g <- function(data, lrnr_g = Lrnr_glm$new(family = binomial())) {
-  task <- sl3_Task$new(data, covariates = c(grep( "^W", colnames(data), value = TRUE)), outcome = "Y")
+  task <- sl3_Task$new(data, covariates = c(grep( "^[WV]", colnames(data), value = TRUE)), outcome = "Y")
   A <- data$A
   g1 <- lrnr_g$train(task[A==1])$predict(task)
   g0 <- lrnr_g$train(task[A==0])$predict(task)

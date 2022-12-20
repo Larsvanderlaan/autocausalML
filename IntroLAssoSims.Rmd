@@ -1,0 +1,92 @@
+---
+title: "LASSO"
+output: html_document
+date: '2022-11-13'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(hal9001)
+library(sandwich)
+ 
+ATE <- 0.1840076 #mean(plogis(W + 1 + 1 * W) - plogis(W))
+
+outs <- sapply(1:100, function(iter){
+  print(iter)
+  n <- 1000
+W <- runif(n, -1 , 1)
+A <- rbinom(n, 1, plogis(W))
+Y <-rbeta(n, 1.5*plogis(W + A + A * W)/(1-plogis(W + A + A * W)), 1.5)
+#Y <- rbinom(n, 1, plogis(W + A + A * W))
+hal_fit <- suppressWarnings(fit_hal(cbind(W,A), Y, family = binomial(), max_degree = 2, num_knots = c(10,10), smoothness_orders = 1, return_x_basis = T ) )
+      
+x_basis <- as.matrix(make_design_matrix(cbind(W,A), hal_fit$basis_list)[,hal_fit$coefs[-1]!=0])
+x_basis1 <- as.matrix(make_design_matrix(cbind(W,1), hal_fit$basis_list)[,hal_fit$coefs[-1]!=0])
+x_basis0 <- as.matrix(make_design_matrix(cbind(W,0), hal_fit$basis_list)[,hal_fit$coefs[-1]!=0])
+fit <- glm(Y~ ., family = "binomial", data = as.data.frame(cbind(Z = x_basis, Y = Y)))
+ATE_est <- mean(predict(fit,as.data.frame(x_basis1) , type = "response") -  predict(fit,as.data.frame(x_basis0), type = "response" ))
+  
+boot_ests <- sapply(1:100, function(iter){
+  index <- sample(1:n, n, replace = T)
+  Y <- Y[index]
+  x_basis <- x_basis[index,]
+  x_basis1 <- x_basis1[index,]
+  x_basis0 <- x_basis0[index,]
+  fit <- suppressWarnings(glm(Y~ ., family = binomial(), data = as.data.frame(cbind(Z = x_basis, Y = Y))))
+  mean(predict(fit,as.data.frame(x_basis1), type = "response" ) -  predict(fit,as.data.frame(x_basis0) , type = "response"))
+})
+se <- sd(boot_ests)
+ print(se)
+ print(abs(ATE_est - ATE))
+ print(abs(ATE_est - ATE) <= 1.96*se)
+return(abs(ATE_est - ATE) <= 1.96*se)
+})
+
+mean(outs)
+```
+
+```{r}
+library(glmnet)
+library(sandwich)
+nsims <- 100
+n <- 500
+d <- 100
+s <- 20
+out <- lapply(c( 100, 250,  500, 1000,2500, 5000), function(n){
+  out <- lapply(1:nsims, function(j){
+    d <- 10*round(sqrt(n) )
+    s <-   5*round((n)^(1/4))
+    active_set <-  1:d %in% 1:s
+    W <- replicate(d, runif(n, -1 , 1))
+    W_active <- W[,active_set==1]
+    A <- rbinom(n, 1, plogis(W_active %*% rep(1, s)))
+    Y <- rnorm(n, W_active %*% rep(0.5, s) + A , 1)
+    
+    Z <- cbind(W,A)
+    fit <- cv.glmnet(Z, Y, family = "gaussian")
+    keep <- which(coef(fit)[-c(1, ncol(Z)+1)] !=0)
+    fit <- lm(Y~ ., data = as.data.frame(cbind(Z = cbind(W[,keep],A), Y = Y)))
+    ATE <- coef(fit)["A"]
+    se <- sqrt(diag(vcovHC(fit, type = "HC"))["A"])
+    CI <- ATE + qnorm(0.975) * c(-1, 1) * se
+    return(c(bias = ATE - 1, se = se))
+  })
+  out <- as.data.frame(do.call(rbind, out))
+  colnames(out) <- c("bias", "se")
+  out$se_oracle <- sd(out$bias)
+  out <- colMeans(out)
+  out <- as.data.frame(t(as.data.frame(out)))
+  out$n <- n
+  out
+})
+out <- do.call(rbind, out)
+out
+#plot(out$n,sqrt(n)* out$se_oracle, type = "l", ylim = c(0.00001, max(c(sqrt(n)* out$se_oracle, sqrt(n)* abs(out$bias)))), log = "x")
+#lines(out$n, sqrt(n)* abs(out$bias), type = "l")
+plot(out$n, abs(out$bias) / out$se_oracle, type = "l")
+```
+

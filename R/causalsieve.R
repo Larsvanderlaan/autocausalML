@@ -364,8 +364,8 @@ causalsieve <- R6::R6Class(
 
       g_basis_generator2 <- private$.args$g_basis_generator
       g_n <- as.vector(g_basis %*% coef)
-      g_n1 <- as.vector(g_basis_generator(X=X,A=1) %*% coef)
-      g_n0<- as.vector(g_basis_generator(X=X,A=0) %*% coef)
+      g_n1 <- as.vector(g_basis_generator2(X=X,A=1) %*% coef)
+      g_n0<- as.vector(g_basis_generator2(X=X,A=0) %*% coef)
       #print(quantile(g_basis_generator2(X=X,A=1)%*% coef))
       #print(quantile(g_basis_generator2(X=X,A=0)%*% coef))
       if(!all(abs(colMeans( g_basis * (Y- g_n)) )<= 1e-8)) {
@@ -443,7 +443,7 @@ causalsieve <- R6::R6Class(
 )
 
 #' @export
-make_g_basis_generator_HAL <- function(X, A, Y, fit_hal_g_params = list(formula = ~ h(.) + h(.,A), reduce_basis = 25/length(A), smoothness_orders = 1, max_degree =2, num_knots = c(100,100)), fit_hal_alpha_params = list(  smoothness_orders = 0, max_degree =1, num_knots = c(25,5)), screen_basis = TRUE, relaxed_fit = TRUE, weight_screen_by_alpha = TRUE, ...) {
+make_g_basis_generator_HAL <- function(X, A, Y, fit_hal_g_params = list(formula = ~ h(.) + h(.,A), reduce_basis = 25/length(A), smoothness_orders = 1, max_degree =2, num_knots = c(100,100)), fit_hal_alpha_params = list(  smoothness_orders = 0, max_degree =1, num_knots = c(25,5)), screen_basis = TRUE, relaxed_fit = F, weight_screen_by_alpha = F, ...) {
 
   V <- as.matrix(cbind(X,A))
   library(hal9001)

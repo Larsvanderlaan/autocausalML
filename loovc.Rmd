@@ -1,0 +1,138 @@
+---
+title: "sieveMethods"
+output: html_document
+date: '2022-10-25'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+set.seed(123)
+library(hal9001)
+n <- 500
+data <- generate_data_linear(n)
+X <- data$X
+A <- data$A
+Y <- data$Y
+V <- cbind(X,A)
+
+fit_hal_g_params <- list(smoothness_orders = 1, max_degree = 2, num_knots = c(1,2), formula = ~ h(.) + h(.,.))
+fit_hal_g_params$fit_control$relax <- FALSE
+fit_hal_g_params$fit_control$gamma <- 0
+basis_formula <- formula_hal(fit_hal_g_params$formula, smoothness_orders = fit_hal_g_params$smoothness_orders, num_knots = fit_hal_g_params$num_knots, X = as.data.frame(V) )$basis_list
+fit_hal_g_params$basis_list <- basis_formula
+fit_hal_g_params$X <- V
+fit_hal_g_params$Y <- Y
+fit_hal_g_params$family = "gaussian"
+fit_hal_g_params$reduce_basis = 25/length(A)
+hal_fit <- sl3:::call_with_args( hal9001::fit_hal, fit_hal_g_params)
+blist <- c(list(list(cols=1, orders = 0, cutoffs = -100)), hal_fit$basis_list)
+x_basis <- as.matrix(make_design_matrix(V, blist))
+x_basis1 <- as.matrix(make_design_matrix(cbind(X,1), blist))
+x_basis0 <- as.matrix(make_design_matrix(cbind(X,0), blist))
+all_coefs <- hal_fit$lasso_fit$glmnet.fit$beta
+
+
+```
+
+```{r}
+
+estimate_alpha_cv <- function(x_basis, A, coefs_mat, folds =  origami::folds_vfold(length(A))){
+
+  alpha_cv <- do.call(rbind,lapply(folds, estimate_alpha_fold, x_basis = x_basis, A = A, coefs_mat = coefs_mat))
+  val_index <- sapply(folds, function(fold){ validation()})
+  cv_index <- which.min(colMeans(A[val_index]*alpha_cv^2 - 2*alpha_cv))
+  #print(as.vector(colMeans(A[val_index]*alpha_cv^2 - 2*alpha_cv)))
+  #print(cv_index)
+  Aval <- A[val_index]
+  oracle_risk <- colMeans( Aval*(alpha_cv - 1/pi[val_index])^2)
+ # print(as.vector(oracle_risk))
+  #print(which.min(oracle_risk))
+  alpha_full <- estimate_alpha1(x_basis, A, coefs_mat[, cv_index, drop = F])
+  alphan1 <-  (x_basis %*% alpha_full)
+
+
+
+  return(alphan1)
+}
+
+
+estimate_alpha1_fold <- function(fold,x_basis, A, coefs_mat) {
+  train_index <- training()
+  validation_index <- validation()
+  coefs_train <- estimate_alpha1(x_basis[train_index, , drop = F], A[train_index], coefs_mat)
+  alpha_n_val <- x_basis[validation_index,, drop = F] %*% coefs_train
+}
+
+estimate_alpha1 <- function(x_basis, A, coefs_mat) {
+  x_basis_full <- x_basis
+  n <- nrow(x_basis_full)
+  alpha_n1_lambda <-   do.call(cbind, lapply(1:ncol(coefs_mat), function(j) {
+    alpha_coef <- rep(0, nrow(coefs_mat))
+    keep <- coefs_mat[, j] != 0
+    x_basis <- x_basis_full[,keep, drop = F]
+
+    alpha_coef_part <- NULL
+    tryCatch({
+
+      alpha_coef_part <-  as.vector(solve(t((A)*x_basis) %*% x_basis, t(x_basis) %*%  rep(1,n)))
+      alpha_coef[keep] <- alpha_coef_part
+    }, error = function(cond){ })
+
+
+
+
+    return(alpha_coef)
+  }))
+
+}
+
+
+
+
+
+```
+
+```{r}
+theta_n_basis <- colMeans(as.matrix(x_basis1 - x_basis0))
+ x_basis_diff <- x_basis1 - x_basis0
+xtx <- t(x_basis) %*% x_basis
+loocv <- sapply(seq_len(ncol(all_coefs)), function(j) {
+  try({
+    index <- all_coefs[,j]!=0
+    x_basis <- x_basis[, index]
+    x_basis_diff <- x_basis_diff[,index]
+    xtx <- xtx[index, index]
+     
+    
+    theta_n_basis <- theta_n_basis[index]
+    
+    beta <- solve(t(x_basis) %*% x_basis/n, theta_n_basis)
+    
+    x_first<- x_basis %*% solve(xtx , t(x_basis_diff))
+    x_second <- solve(xtx , t(x_basis))
+    h <- diag(x_basis %*% x_second)
+     
+    loss <- x_basis %*% beta - diag(x_first) + h /(1-h) * ( x_basis %*% beta - diag(x_first) )
+     
+    
+    
+    
+    
+    mean(loss, na.rm=T)
+    
+    
+  })
+  
+})
+
+loocv <- as.numeric(loocv)
+which.min(loocv
+)
+
+
+
+```

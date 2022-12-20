@@ -1,7 +1,7 @@
 
 name <- "ComplexParametricHAL"
-name <- "LassoHighDim"
-name <- "SimpleParametricHAL"
+#name <- "LassoHighDim"
+#name <- "SimpleParametricHAL"
 library(data.table)
 consts <- c(3,5,8)
 ns <- c(500,1000,2500,5000)
@@ -22,7 +22,7 @@ outs <- rbindlist(lapply(ns, function(n) {
  link <- name
 
 ATE <- 1
-# ATE <- 1.811417
+ ATE <- 1.811417
 
 
 
