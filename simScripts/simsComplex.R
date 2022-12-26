@@ -5,7 +5,7 @@ library(sl3)
 library(doMC)
 library(hal9001)
 
-doMC::registerDoMC(cores = 10)
+doMC::registerDoMC(cores = 11)
 
 run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.) + h(.,A), num_knots = c(1,1), smoothness_orders = 1, max_degree = 2,screen_basis = F, gen_fun, lrnr_pi = Lrnr_glmnet$new(), lrnr_g = Lrnr_glmnet$new(formula = ~ . + A * .),nboots = 500, relaxed_fit = TRUE, weight_screen_by_alpha = FALSE) {
   print(const)
@@ -22,7 +22,7 @@ run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.)
   A <- datam_list$A
   Y <- datam_list$Y
   fit_control$parallel = TRUE
-  fit_control$foldid <- (sample(1:n,n, replace= FALSE) %% 5) + 1
+  fit_control$foldid <- (sample(1:n,n, replace= FALSE) %% 10) + 1
   fit_hal_g_params$fit_control <- fit_control
   fit_hal_g_params$num_knots <- num_knots
   fit_hal_g_params$smoothness_orders <- smoothness_orders
