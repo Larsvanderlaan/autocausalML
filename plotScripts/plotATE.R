@@ -41,10 +41,10 @@ out_sieveIF$method = "Sieve - IF"
 col_names <- colnames(out_sieveIF)
 
 #out_sieve <- out_sieveIF_df
-#out_sieve$method = "HAL-AdaMLE (under)"
+#out_sieve$method = "HAL-AdaMLE "
 
 out_sieveIF_df <- outs[,c("const", "n", "iter", "estimate", "CI_df_left", "CI_df_right")]
-out_sieveIF_df$method = "HAL-AdaMLE (under)"
+out_sieveIF_df$method = "HAL-AdaMLE "
 colnames(out_sieveIF_df) <- col_names
 
 out_sieveboot <- outs[,c("const", "n", "iter", "estimate", "CI_boot_left", "CI_boot_right")]
@@ -92,7 +92,7 @@ plot_data <- data.table(const = coverage$const, method = coverage$method, n = co
 
 library(ggplot2)
 
-ggplot(plot_data[method %in% c("Linear-model", "AIPW", "TMLE", "HAL-AdaMLE (under)", "HAL-AdaMLE (CV)")], aes(x=n, y = bias, group = method, color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5))  + labs(x = "Sample Size (n)", y = "Empirical Bias", color = "Method", group = "Method", linetype = "Method")
+ggplot(plot_data[method %in% c("Linear-model", "AIPW", "TMLE", "HAL-AdaMLE ", "HAL-AdaMLE (CV)")], aes(x=n, y = bias, group = method, color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5))  + labs(x = "Sample Size (n)", y = "Empirical Bias", color = "Method", group = "Method", linetype = "Method")
 
 
 
@@ -100,7 +100,7 @@ ggplot(plot_data[method %in% c("Linear-model", "AIPW", "TMLE", "HAL-AdaMLE (unde
 
 ggsave(paste0(link, "_bias.pdf"), width = 7, height = 4)
 
-ggplot(plot_data[method %in% c("Linear-model", "AIPW", "TMLE", "HAL-AdaMLE (under)", "HAL-AdaMLE (CV)")], aes(x=n, y = se, group = method, color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5))  + labs(x = "Sample Size (n)", y = "Empirical Standard Error", color = "Method", group = "Method", linetype = "Method")
+ggplot(plot_data[method %in% c("Linear-model", "AIPW", "TMLE", "HAL-AdaMLE ", "HAL-AdaMLE (CV)")], aes(x=n, y = se, group = method, color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5))  + labs(x = "Sample Size (n)", y = "Empirical Standard Error", color = "Method", group = "Method", linetype = "Method")
 
 
 #ggsave("SimPlotHALsmallSample_se.pdf", width = 7, height = 4)
@@ -109,12 +109,12 @@ ggsave(paste0(link, "_se.pdf"), width = 7, height = 4)
 
 
 
-ggplot(plot_data[method %in% c("AIPW", "TMLE","Linear-model", "HAL-AdaMLE (under)", "HAL-AdaMLE (CV)")] , aes(x=n, y = cov_oracle, group = method, color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5))  + labs(x = "Sample Size (n)", y = "Oracle CI coverage", color = "Method", group = "Method", linetype = "Method") + scale_y_continuous( )
+ggplot(plot_data[method %in% c("AIPW", "TMLE","Linear-model", "HAL-AdaMLE ", "HAL-AdaMLE (CV)")] , aes(x=n, y = cov_oracle, group = method, color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5))  + labs(x = "Sample Size (n)", y = "Oracle CI coverage", color = "Method", group = "Method", linetype = "Method") + scale_y_continuous( )
 
 ggsave(paste0(link, "_coverage_oracle.pdf"), width = 7, height = 4)
 
 
-plot_data <- plot_data[(method %in%   c("AIPW", "TMLE","Linear-model", "HAL-AdaMLE (under)", "HAL-AdaMLE (CV)"))]
+plot_data <- plot_data[(method %in%   c("AIPW", "TMLE","Linear-model", "HAL-AdaMLE ", "HAL-AdaMLE (CV)"))]
 
 
 ggplot(plot_data , aes(x=n, y = coverage, group = method, color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5))  + labs(x = "Sample Size (n)", y = "Empirical CI coverage", color = "Method", group = "Method", linetype = "Method") + scale_y_continuous(breaks = c(0.95, 0.93, 0.9, 0.8, 0.7))
