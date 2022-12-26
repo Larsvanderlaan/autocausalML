@@ -10,7 +10,7 @@ doMC::registerDoMC(cores = 10)
 run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.) + h(.,A), num_knots = c(1,1), smoothness_orders = 1, max_degree = 2,screen_basis = F, gen_fun, lrnr_pi = Lrnr_glmnet$new(), lrnr_g = Lrnr_glmnet$new(formula = ~ . + A * .),nboots = 500, relaxed_fit = TRUE, weight_screen_by_alpha = FALSE) {
   print(const)
   print(n)
-  fit_hal_g_params = list(   smoothness_orders = 1, max_degree =2, num_knots = c(100,100))
+  fit_hal_g_params = list(   smoothness_orders = smoothness_orders, max_degree =max_degree, num_knots = num_knots)
 
   out_list <- list()
 

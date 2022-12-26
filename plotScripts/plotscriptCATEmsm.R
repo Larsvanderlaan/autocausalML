@@ -38,7 +38,7 @@ out_sieve <- out_sieveIF
 out_sieve$method = "Sieve - plugin"
 
 out_sieveIF_df <- outs[,c("name","const", "n", "iter", "estimate", "CI_df_left", "CI_df_right")]
-out_sieveIF_df$method = "Sieve - IF w/ df adjust."
+out_sieveIF_df$method = "HAL-AdaMLE "
 colnames(out_sieveIF_df) <- col_names
 
 out_sieveboot <- outs[,c("name","const", "n", "iter", "estimate", "CI_boot_left", "CI_boot_right")]
@@ -64,7 +64,7 @@ out_sieve_oracle[, CI_left:= estimate - qnorm(1-0.05/2) * sd(estimate), by = c("
 out_sieve_oracle[, CI_right:= estimate + qnorm(1-0.05/2) * sd(estimate), by = c("const", "n", "name")]
 
 
-results <- rbind(out_sieve, out_sieve_oracle, out_sieveIF, out_sieveIF_df, out_sieveboot, out_npglm, out_spglm)
+results <- rbind( out_sieve_oracle, out_sieveIF_df,  out_npglm, out_spglm)
 
 results[-grep( "W",results$name ), "name"] <- "intercept"
 results[grep( "W",results$name ), "name"] <- "X"
@@ -88,32 +88,32 @@ plot_data_orig <- plot_data
 plot_data <- plot_data_orig
 
 plot_data <- plot_data[plot_data$name %in% c("intercept")]
-ggplot(plot_data[method %in% c("npWorkingTMLE", "spTMLE", "Sieve - IF w/ df adjust.")], aes(x=n, y = bias,   color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5))  + labs(x = "Sample Size (n)", y = "Empirical Bias", color = "Method", group = "Method", linetype = "Method")
+ggplot(plot_data[method %in% c("npWorkingTMLE", "spTMLE", "HAL-AdaMLE ")], aes(x=n, y = bias,   color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5))  + labs(x = "Sample Size (n)", y = "Empirical Bias", color = "Method", group = "Method", linetype = "Method")
 
 
 
 ggsave("SimPlotHALCATE_biasinter.pdf", width = 7, height = 4)
 
 
-ggplot(plot_data[method %in%  c("npWorkingTMLE", "spTMLE", "Sieve - IF w/ df adjust.")], aes(x=n, y = se,  color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5))  + labs(x = "Sample Size (n)", y = "Empirical Standard Error", color = "Method", group = "Method", linetype = "Method")
+ggplot(plot_data[method %in%  c("npWorkingTMLE", "spTMLE", "HAL-AdaMLE ")], aes(x=n, y = se,  color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5))  + labs(x = "Sample Size (n)", y = "Empirical Standard Error", color = "Method", group = "Method", linetype = "Method")
 
 ggsave("SimPlotHALCATE_seinter.pdf", width = 7, height = 4)
 
 
 
-ggplot(plot_data[method %in%  c("npWorkingTMLE", "spTMLE", "Sieve - IF w/ df adjust.")] , aes(x=n, y = cov_oracle, color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5))  + labs(x = "Sample Size (n)", y = "Oracle CI coverage", color = "Method", group = "Method", linetype = "Method")
+ggplot(plot_data[method %in%  c("npWorkingTMLE", "spTMLE", "HAL-AdaMLE ")] , aes(x=n, y = cov_oracle, color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5))  + labs(x = "Sample Size (n)", y = "Oracle CI coverage", color = "Method", group = "Method", linetype = "Method")
 
 ggsave("SimPlotHALCATE_coverage_oracleinter.pdf", width = 7, height = 4)
 
 
 
-ggplot(plot_data[method %in%  c("npWorkingTMLE", "spTMLE", "Sieve - IF w/ df adjust.")] , aes(x=n, y = coverage,  color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5))  + labs(x = "Sample Size (n)", y = "Empirical CI coverage", color = "Method", group = "Method", linetype = "Method") + scale_y_continuous(breaks = c(0.95, 0.93, 0.9, 0.8, 0.7, 0.6))
+ggplot(plot_data[method %in%  c("npWorkingTMLE", "spTMLE", "HAL-AdaMLE ")] , aes(x=n, y = coverage,  color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5))  + labs(x = "Sample Size (n)", y = "Empirical CI coverage", color = "Method", group = "Method", linetype = "Method") + scale_y_continuous(breaks = c(0.95, 0.93, 0.9, 0.8, 0.7, 0.6))
 
 ggsave("SimPlotHALCATE_coverageinter.pdf", width = 7, height = 4)
 
 
 
-ggplot(plot_data[  method %in% c("npWorkingTMLE", "spTMLE", "Sieve - IF w/ df adjust.")] , aes(x=n, y = CI_width,  color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5)) + labs(x = "Sample Size (n)", y = "Average CI width", color = "Method", group = "Method", linetype = "Method")
+ggplot(plot_data[  method %in% c("npWorkingTMLE", "spTMLE", "HAL-AdaMLE ")] , aes(x=n, y = CI_width,  color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5)) + labs(x = "Sample Size (n)", y = "Average CI width", color = "Method", group = "Method", linetype = "Method")
 
 ggsave("SimPlotHALCATE_CI_widthinter.pdf", width = 7, height = 4)
 
@@ -125,32 +125,32 @@ ggsave("SimPlotHALCATE_CI_widthinter.pdf", width = 7, height = 4)
 
 plot_data <- plot_data_orig
 plot_data <- plot_data[plot_data$name %in% c("X")]
-ggplot(plot_data[method %in% c("npWorkingTMLE", "spTMLE", "Sieve - IF w/ df adjust.")], aes(x=n, y = bias,   color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5))  + labs(x = "Sample Size (n)", y = "Empirical Bias", color = "Method", group = "Method", linetype = "Method")
+ggplot(plot_data[method %in% c("npWorkingTMLE", "spTMLE", "HAL-AdaMLE ")], aes(x=n, y = bias,   color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5))  + labs(x = "Sample Size (n)", y = "Empirical Bias", color = "Method", group = "Method", linetype = "Method")
 
 
 
 ggsave("SimPlotHALCATE_bias_X.pdf", width = 7, height = 4)
 
 
-ggplot(plot_data[method %in%  c("npWorkingTMLE", "spTMLE", "Sieve - IF w/ df adjust.")], aes(x=n, y = se,  color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5))  + labs(x = "Sample Size (n)", y = "Empirical Standard Error", color = "Method", group = "Method", linetype = "Method")
+ggplot(plot_data[method %in%  c("npWorkingTMLE", "spTMLE", "HAL-AdaMLE ")], aes(x=n, y = se,  color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5))  + labs(x = "Sample Size (n)", y = "Empirical Standard Error", color = "Method", group = "Method", linetype = "Method")
 
 ggsave("SimPlotHALCATE_se_X.pdf", width = 7, height = 4)
 
 
 
-ggplot(plot_data[method %in%  c("npWorkingTMLE", "spTMLE", "Sieve - IF w/ df adjust.")] , aes(x=n, y = cov_oracle, color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5))  + labs(x = "Sample Size (n)", y = "Oracle CI coverage", color = "Method", group = "Method", linetype = "Method")
+ggplot(plot_data[method %in%  c("npWorkingTMLE", "spTMLE", "HAL-AdaMLE ")] , aes(x=n, y = cov_oracle, color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5))  + labs(x = "Sample Size (n)", y = "Oracle CI coverage", color = "Method", group = "Method", linetype = "Method")
 
 ggsave("SimPlotHALCATE_coverage_oracle_X.pdf", width = 7, height = 4)
 
 
 
-ggplot(plot_data[method %in%  c("npWorkingTMLE", "spTMLE", "Sieve - IF w/ df adjust.")] , aes(x=n, y = coverage,  color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5))  + labs(x = "Sample Size (n)", y = "Empirical CI coverage", color = "Method", group = "Method", linetype = "Method") + scale_y_continuous(breaks = c(0.95,0.93, 0.9, 0.8, 0.7, 0.6))
+ggplot(plot_data[method %in%  c("npWorkingTMLE", "spTMLE", "HAL-AdaMLE ")] , aes(x=n, y = coverage,  color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5))  + labs(x = "Sample Size (n)", y = "Empirical CI coverage", color = "Method", group = "Method", linetype = "Method") + scale_y_continuous(breaks = c(0.95,0.93, 0.9, 0.8, 0.7, 0.6))
 
 ggsave("SimPlotHALCATE_coverage_X.pdf", width = 7, height = 4)
 
 
 
-ggplot(plot_data[  method %in% c("npWorkingTMLE", "spTMLE", "Sieve - IF w/ df adjust.")] , aes(x=n, y = CI_width,  color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5)) + labs(x = "Sample Size (n)", y = "Average CI width", color = "Method", group = "Method", linetype = "Method")
+ggplot(plot_data[  method %in% c("npWorkingTMLE", "spTMLE", "HAL-AdaMLE ")] , aes(x=n, y = CI_width,  color = method, linetype=method)) + geom_line() +  facet_wrap(~ const) + theme_bw() + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5)) + labs(x = "Sample Size (n)", y = "Average CI width", color = "Method", group = "Method", linetype = "Method")
 
 ggsave("SimPlotHALCATE_CI_width_X.pdf", width = 7, height = 4)
 

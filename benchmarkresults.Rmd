@@ -1,0 +1,188 @@
+---
+title: "benchmarkresults"
+output: html_document
+date: '2022-08-23'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r}
+library(CVXR)
+lasso <- function(beta, lambda=0) {
+  lambda * sum(abs(beta))
+}
+
+beta <- Variable(n)
+loss <- sum(((X%*% beta)^2 - 2* y*X %% beta))
+obj <- loss + lasso(beta, 1)
+prob < Problem(Minimize(obj))
+result <- solve(prob)
+```
+
+```{r}
+library(data.table)
+
+ATE_all <- fread(paste0("benchmark_datasets/ACICDataChallenge2019/", "lowDim_trueATE.csv"))
+file_names <- paste0("low", 1:3200)
+file_name <- file_names[1]
+ns <- sapply(file_names, function(file_name) {
+  data <- fread(paste0("benchmark_datasets/low_dimensional_datasets/", file_name, ".csv"))
+  (nrow(data))
+})
+
+file_names <- file_names[ns<=1000]
+ATE_all <- ATE_all[ATE_all$filename %in% file_names,]
+
+
+DGPid <- sort(unique(ATE_all$DGPid))[1]
+bias_list <- list()
+se_list <- list()
+cov_list <- list()
+for(DGPid in sort(unique(ATE_all$DGPid))) {
+  
+  try({
+dt <- fread(paste0("benchmark_datasets/results/", "Sims_glmnet_bi_DGPid=", DGPid, ".csv" ))
+  bias_list[[DGPid]] <- (data.table(bias = mean(dt$bias,na.rm=T),
+                   bias_tmle = mean(dt$bias_tmle,na.rm=T),
+                   bias_aipw = mean(dt$bias_aipw,na.rm=T) 
+                   ))
+  
+ se_list[[DGPid]] <- data.table(se = sd(dt$bias,na.rm=T),
+                   se_tmle = sd(dt$bias_tmle,na.rm=T),
+                   se_aipw = sd(dt$bias_aipw,na.rm=T) 
+                   ) 
+  
+    cov_list[[DGPid]] <-  data.table(DGPid = DGPid, cov_boot = mean(dt$CI_boot_cov),
+                   cov_IF = mean(dt$CI_IF_cov, na.rm=T),
+                   cov_tmle = mean(dt$cov_tmle,na.rm=T),
+                   cov_aipw = mean(dt$cov_aipw,na.rm=T) 
+                   ) 
+  })
+  
+}
+
+rbindlist(se_list)
+rbindlist(cov_list)
+# 
+# library(kableExtra)
+# tab <- kable(rbindlist(cov_list)) %>% kable_styling()
+# save_kable(tab, file = "sims_glm_add.pdf")
+```
+
+
+
+```{r}
+ 
+
+DGPid <- sort(unique(ATE_all$DGPid))[1]
+bias_list <- list()
+se_list <- list()
+cov_list <- list()
+for(DGPid in sort(unique(ATE_all$DGPid))) {
+  
+  try({
+dt <- fread(paste0("benchmark_datasets/results/", "Sims_HAL_zero3_DGPid=", DGPid, ".csv" ))
+  bias_list[[DGPid]] <- (data.table(bias = mean(dt$bias,na.rm=T),
+                   bias_tmle = mean(dt$bias_tmle,na.rm=T),
+                   bias_aipw = mean(dt$bias_aipw,na.rm=T) 
+                   ))
+  
+ se_list[[DGPid]] <- data.table(se = sd(dt$bias,na.rm=T),
+                   se_tmle = sd(dt$bias_tmle,na.rm=T),
+                   se_aipw = sd(dt$bias_aipw,na.rm=T) 
+                   ) 
+  
+    cov_list[[DGPid]] <-  data.table(DGPid = DGPid, cov_boot = mean(dt$CI_boot_cov),
+                   cov_IF = mean(dt$CI_IF_cov, na.rm=T),
+                   cov_tmle = mean(dt$cov_tmle,na.rm=T),
+                   cov_aipw = mean(dt$cov_aipw,na.rm=T) 
+                   ) 
+  })
+  
+}
+
+rbindlist(cov_list)
+
+```
+
+
+
+
+
+```{r}
+ 
+
+DGPid <- sort(unique(ATE_all$DGPid))[1]
+bias_list <- list()
+se_list <- list()
+cov_list <- list()
+for(DGPid in sort(unique(ATE_all$DGPid))) {
+  
+  try({
+dt <- fread(paste0("benchmark_datasets/results/", "Sims_GAM_k10_DGPid=", DGPid, ".csv" ))
+  bias_list[[DGPid]] <- (data.table(bias = mean(dt$bias,na.rm=T),
+                   bias_tmle = mean(dt$bias_tmle,na.rm=T),
+                   bias_aipw = mean(dt$bias_aipw,na.rm=T) 
+                   ))
+  
+ se_list[[DGPid]] <- data.table(se = sd(dt$bias,na.rm=T),
+                   se_tmle = sd(dt$bias_tmle,na.rm=T),
+                   se_aipw = sd(dt$bias_aipw,na.rm=T) 
+                   ) 
+  
+    cov_list[[DGPid]] <-  data.table(cov_boot = mean(dt$CI_boot_cov),
+                   cov_IF = mean(dt$CI_IF_cov, na.rm=T),
+                   cov_tmle = mean(dt$cov_tmle,na.rm=T),
+                   cov_aipw = mean(dt$cov_aipw,na.rm=T) 
+                   ) 
+  })
+  
+}
+
+rbindlist(cov_list)
+
+```
+
+
+
+
+
+
+
+```{r}
+ 
+
+DGPid <- sort(unique(ATE_all$DGPid))[1]
+bias_list <- list()
+se_list <- list()
+cov_list <- list()
+for(DGPid in sort(unique(ATE_all$DGPid))) {
+  
+  try({
+dt <- fread(paste0("benchmark_datasets/results/", "Sims_GAM_k10_DGPid=", DGPid, ".csv" ))
+  bias_list[[DGPid]] <- (data.table(bias = mean(dt$bias,na.rm=T),
+                   bias_tmle = mean(dt$bias_tmle,na.rm=T),
+                   bias_aipw = mean(dt$bias_aipw,na.rm=T) 
+                   ))
+  
+ se_list[[DGPid]] <- data.table(se = sd(dt$bias,na.rm=T),
+                   se_tmle = sd(dt$bias_tmle,na.rm=T),
+                   se_aipw = sd(dt$bias_aipw,na.rm=T) 
+                   ) 
+  
+    cov_list[[DGPid]] <-  data.table(cov_boot = mean(dt$CI_boot_cov),
+                   cov_IF = mean(dt$CI_IF_cov, na.rm=T),
+                   cov_tmle = mean(dt$cov_tmle,na.rm=T),
+                   cov_aipw = mean(dt$cov_aipw,na.rm=T) 
+                   ) 
+  })
+  
+}
+
+rbindlist(cov_list)
+
+```

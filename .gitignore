@@ -3,4 +3,5 @@
 .RData
 .Ruserdata
 .csv
-benchmark*
+benchmark_datasets
+benchmark_datasets/*
