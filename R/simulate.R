@@ -70,6 +70,7 @@ generate_data_nonlinear_CATE <- function(n, const = 1.5) {
   g0 <- W1*sin(5*W1) + cos(5*W2) + sin(5*W3) + W4*cos(5*W4)
   g1 <- g0 + A * CATE
   Y <- rnorm(n,  A*g1 + (1-A)*g0  , 1.5)
+
   return(list(X=X, A=A, Y=Y, data= as.data.frame(cbind(X,A,Y)), g1  = g1, g0 = g0, pi=pi,  ATE =   1))
 }
 
@@ -105,6 +106,7 @@ generate_data_linear <- function(n, const = 1.5) {
   g1 <- 1 + 1*(1 + W1 + W2 + W3 + W4 ) + W1 + W2 + W3 + W4
   g0 <- 1 + W1 + W2 + W3 + W4
   Y <- rnorm(n, A*g1 + (1-A)*g0, 1.5)
+
   return(list(X=X, A=A, Y=Y, data= as.data.frame(cbind(X,A,Y)), g1  = g1, g0 = g0, pi=pi,  ATE =  1))
 }
 
@@ -130,6 +132,7 @@ generate_data_linear_lasso <- function(n, const = 1.5) {
   g1 <- 1 + 1*(1 + W2 + W3 + W6   )  + W2 + W3 + W6 + W8 + W10
   g0 <- 1 + W2 + W3 + W6 + W8 + W10
   Y <- rnorm(n, A*g1 + (1-A)*g0, 1.5)
+
   return(list(X=X, A=A, Y=Y, data= as.data.frame(cbind(X,A,Y)), g1  = g1, g0 = g0, pi=pi,  ATE =  1))
 }
 
@@ -147,6 +150,7 @@ generate_data_nonlinear <- function(n, const = 1.5) {
   g1 <- 1 + 1 + 1*(abs(W1) + sin(5*W2) + abs(W3) + cos(5*W4)  ) + sin(5*W1) + abs(W2) + sin(5*W3) + 1/(1.25 + W4)
   g0 <- 1 + 0 + 0*(abs(W1) + sin(5*W2) + abs(W3) + cos(5*W4)  ) + sin(5*W1) + abs(W2) + sin(5*W3) + 1/(1.25 + W4)
   Y <- rnorm(n,  A*g1 + (1-A)*g0  , 1.5)
+
   return(list(X=X, A=A, Y=Y, data= as.data.frame(cbind(X,A,Y)), g1  = g1, g0 = g0, pi=pi,  ATE =   1.806832))
 }
 

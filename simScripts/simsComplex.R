@@ -166,20 +166,26 @@ run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.)
 
 ### COMPLEX
 
-
+nsims <- 1000
 library(sl3)
 fit_control <- list()
-if(n >= 4000){
+if(n == 5000){
   nknots <- 100
   fit_control$lambda.min.ratio <- 1e-5
-} else if(n == 2500){
-  nknots <- 75
+} else if(n == 4000){
+  nknots <- 80
+  fit_control$lambda.min.ratio <- 1e-5
+} else if(n == 3000){
+  nknots <- 65
   fit_control$lambda.min.ratio <- 1e-4
-} else if(n == 1000){
+} else if(n == 2000){
   nknots <- 50
   fit_control$lambda.min.ratio <- 1e-4
+} else if(n == 1000){
+  nknots <- 35
+  fit_control$lambda.min.ratio <- 1e-4
 } else if(n == 500){
-  nknots <- 30
+  nknots <- 20
   fit_control$lambda.min.ratio <- 1e-4
 }
 
