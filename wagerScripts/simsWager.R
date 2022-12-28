@@ -1,10 +1,10 @@
 
-
+nsims <- 1
 source("simsWagerHelper.R")
 d <- 5
 k <- 3
 settings <- list("beta" = sim_beta, "pois" = sim_pois, "norm" = sim_norm, "log" = sim_log)
-generator <- settings[[setting]]
+sim_generator <- settings[[setting]]
 if(setting == "norm" {
   d <- 3
   k <- 2
