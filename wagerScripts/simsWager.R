@@ -1,9 +1,9 @@
 #setwd("./wagerScripts")
 #n <- 1000
-#setting <- "pois"
+#setting <- "norm"
 
-
-nsims <- 500
+set.seed(17592057)
+nsims <- 100
 source("simsWagerHelper.R")
 d <- 2
 k <- 2
@@ -16,7 +16,24 @@ if(setting == "norm") {
 n <- as.numeric(n)
 nsims <- as.numeric(nsims)
 doMC::registerDoMC(cores = 11)
-results <- run_sims(n, d, k, sim_generator, nsims)
+if(n== 500){
+  nknots <- c(25,25)
+  nknots_tau <- c(10)
+} else if(n == 1000) {
+  nknots <- c(50,50)
+  nknots_tau <- c(20)
+} else if(n == 1500) {
+  nknots <- c(75,75)
+  nknots_tau <- c(30)
+} else if(n == 2000) {
+  nknots <- c(100,100)
+  nknots_tau <- c(50)
+} else if(n == 3000) {
+  nknots <- c(200,200)
+  nknots_tau <- c(50)
+}
+
+results <- run_sims(n, d, k, sim_generator, nsims, nknots, nknots_tau)
 results <- as.data.frame(do.call(cbind, results))
-fwrite(results,file = paste0("simsWager_" ,setting, "_", n, "d2k2.csv" ) )
+#fwrite(results,file = paste0("simsWager_" ,setting, "_", n, "d2k2.csv" ) )
 
