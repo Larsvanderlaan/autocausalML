@@ -1,0 +1,45 @@
+Package: autocausalML
+Type: Package
+Title: What the Package Does (Title Case)
+Version: 0.1.0
+Author: Who wrote it
+Maintainer: The package maintainer <yourself@somewhere.net>
+Description: More about what it does (maybe more than one line)
+    Use four spaces when indenting paragraphs within the Description.
+License: What license is it under?
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.1.2
+Imports: 
+  sl3,
+  SuperLearner,
+  stats,
+  data.table,
+  R6,
+  stringr,
+  origami,
+  delayed,
+  future,
+  fda,
+  earth,
+  fastglm,
+  doMC,
+  hal9001,
+  glmnet
+Depends:
+  sl3,
+  SuperLearner,
+  stats,
+  data.table,
+  R6,
+  stringr,
+  origami,
+  delayed,
+  future,
+  xgboost,
+  fda,
+  earth,
+  fastglm,
+  doMC
+Remotes: github::tlverse/hal9001@Larsvanderlaan-formula-patch, github::tlverse/sl3@develVersionChangeLars
+ 
