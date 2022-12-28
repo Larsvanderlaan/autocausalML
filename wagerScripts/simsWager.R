@@ -1,9 +1,9 @@
-setwd("./wagerScripts")
-n <- 1000
-setting <- "pois"
+#setwd("./wagerScripts")
+#n <- 1000
+#setting <- "pois"
 
 
-nsims <- 100
+nsims <- 500
 source("simsWagerHelper.R")
 d <- 2
 k <- 2
