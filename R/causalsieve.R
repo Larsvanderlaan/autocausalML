@@ -104,6 +104,8 @@ causalsieve <- R6::R6Class(
       theta_functional_msm = function(X,A, g) {
         #X <- self$args$X
         #A <- self$args$A
+       # print(m_functional_string)
+       # print(g)
         m_A_X_g <- eval(parse(text=m_functional_string))
         if(is_intercept_msm) {
           return(colMeans(as.matrix(m_A_X_g )))
