@@ -1,5 +1,5 @@
 
-nsims <- 1
+nsims <- 500
 source("simsWagerHelper.R")
 d <- 5
 k <- 3
@@ -11,7 +11,7 @@ if(setting == "norm") {
 }
 n <- as.numeric(n)
 nsims <- as.numeric(nsims)
-
+doMC::registerDoMC(cores = 11)
 results <- run_sims(n, d, k, sim_generator, nsims)
 results <- as.data.frame(do.call(cbind, results))
 fwrite(results,file = paste0("simsWager_" ,setting, "_", n, ".csv" ) )
