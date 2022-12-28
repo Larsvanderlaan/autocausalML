@@ -5,10 +5,10 @@ d <- 5
 k <- 3
 settings <- list("beta" = sim_beta, "pois" = sim_pois, "norm" = sim_norm, "log" = sim_log)
 sim_generator <- settings[[setting]]
-if(setting == "norm" {
+if(setting == "norm") {
   d <- 3
   k <- 2
-})
+}
 n <- as.numeric(n)
 nsims <- as.numeric(nsims)
 
