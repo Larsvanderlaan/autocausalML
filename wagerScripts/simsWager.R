@@ -14,5 +14,5 @@ nsims <- as.numeric(nsims)
 doMC::registerDoMC(cores = 11)
 results <- run_sims(n, d, k, sim_generator, nsims)
 results <- as.data.frame(do.call(cbind, results))
-fwrite(results,file = paste0("simsWager_" ,setting, "_", n, ".csv" ) )
+fwrite(results,file = paste0("simsWager_" ,setting, "_", n, "_less_knots.csv" ) )
 

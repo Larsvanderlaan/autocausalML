@@ -135,8 +135,8 @@ run_sims <- function(n, d, k, sim_generator, nsims) {
       print(trueATE)
       print(approxATE)
       #fit_hal_g_params <- list(formula <- ~ h(.) + h(.,A), max_degree = 2, num_knots = c(20,20), smoothness_orders = 1)
-      basis_list_mu <- hal9001::enumerate_basis((X), max_degree = 2, num_knots = c(100,50, 1 ), smoothness_orders =0)
-      basis_list_tau <- hal9001::enumerate_basis((X), max_degree = 1, num_knots = c(100, 1), smoothness_orders = 1)
+      basis_list_mu <- hal9001::enumerate_basis((X), max_degree = 2, num_knots = c(50,50, 1 ), smoothness_orders =0)
+      basis_list_tau <- hal9001::enumerate_basis((X), max_degree = 1, num_knots = c(50, 1), smoothness_orders = 1)
 
       x_basis_mu <- cbind(1, as.matrix(make_design_matrix(X, basis_list_mu, 0.9)))
       x_basis_tau <- cbind(1, as.matrix(make_design_matrix(X, basis_list_tau, 0.9)))
@@ -196,10 +196,10 @@ run_sims <- function(n, d, k, sim_generator, nsims) {
 
       # DR Competitor
       print("Fitting mean A")
-      fit_A <- fit_hal(X, A,   family = "gaussian", smoothness_orders = 0, max_degree =2, num_knots=  c(100,50), fit_control = list(parallel = TRUE))
+      fit_A <- fit_hal(X, A,   family = "gaussian", smoothness_orders = 0, max_degree =2, num_knots=  c(50,50), fit_control = list(parallel = TRUE))
       EA <- predict(fit_A, new_data = X)
       print("Fitting variance A")
-      fit_varA <- fit_hal(X, (A- EA)^2,  family = "gaussian", smoothness_orders = 0, max_degree =1, num_knots=  c(100,1), fit_control = list(parallel = TRUE))
+      fit_varA <- fit_hal(X, (A- EA)^2,  family = "gaussian", smoothness_orders = 0, max_degree =1, num_knots=  c(50,1), fit_control = list(parallel = TRUE))
       VarA <- pmax(predict(fit_varA, new_data = X), 1e-3)
       DR <- mean(theta_n_A1 - theta_n_A0 + (A  - EA) / VarA * (Y - theta_n))
       DR_se <- sd(theta_n_A1 - theta_n_A0 + (A  - EA) / VarA * (Y - theta_n)) / sqrt(n)
