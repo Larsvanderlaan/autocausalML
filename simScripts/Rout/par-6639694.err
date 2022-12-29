@@ -48,3 +48,7 @@ Loaded glmnet 4.1-4
 Loading required package: Rcpp
 hal9001 v0.4.4: The Scalable Highly Adaptive Lasso
 note: fit_hal defaults have changed. See ?fit_hal for details
+Warning messages:
+1: In sim_generator(n = 5e+05, d, k) : Theta has negative values
+2: In sim_generator(n, d, k) : Theta has negative values
+3: In sim_generator(n, d, k) : Theta has negative values

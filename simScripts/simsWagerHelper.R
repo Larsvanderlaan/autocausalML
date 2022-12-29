@@ -104,22 +104,22 @@ sim_bin <- function(n, d, k) {
 
 
 
-get_projection <- function(sim_generator, d, k) {
-  data_big <- sim_generator(n= 10000,d,k)
+get_projection <- function(sim_generator, d, k, nknots, nknots_tau) {
+  data_big <- sim_generator(n= 25000,d,k)
   X <- as.matrix(data_big[,paste0("X", 1:d)])
   A <- data_big$W
   Y <-  data_big$Y
   theta <- data_big$theta
 
-  basis_list_mu <- hal9001::enumerate_basis((X), max_degree = 2, num_knots = c(100,100, 1 ), smoothness_orders =0)
-  basis_list_tau <- hal9001::enumerate_basis((X), max_degree = 1, num_knots = c(100,1), smoothness_orders = 1)
+  basis_list_mu <- hal9001::enumerate_basis((X), max_degree = 2, num_knots = nknots, smoothness_orders =0)
+  basis_list_tau <- hal9001::enumerate_basis((X), max_degree = 1, num_knots = nknots_tau, smoothness_orders = 1)
   x_basis_mu <- cbind(1, as.matrix(make_design_matrix(X, basis_list_mu, 0.9)))
   x_basis_tau <- cbind(1, as.matrix(make_design_matrix(X, basis_list_tau, 0.9)))
   x_basis <- cbind(  x_basis_mu, A * x_basis_tau)
   penalty.factor <-  rep(1, ncol(x_basis))
   #fit_A <- fit_hal(cbind(X,A), theta,   family = "gaussian", smoothness_orders = 0, max_degree =3, num_knots=  c(50,50, 10), fit_control = list(parallel = TRUE))
   #mean(predict(fit_A, new_data = cbind(X,1)) -  predict(fit_A, new_data=cbind(X,0)))
-  lasso_fit <- glmnet::glmnet(x_basis, theta, family = "gaussian", lambda = 1e-7,  intercept = F,   standardize = FALSE, lambda.min.ratio = 1e-4)
+  lasso_fit <- glmnet::glmnet(x_basis, theta, family = "gaussian", lambda = 1e-8,  intercept = F,   standardize = FALSE, lambda.min.ratio = 1e-4)
   beta <- as.vector(coef(lasso_fit, s = "lambda.min"))[-1]
 
  # lasso_fit <- speedglm::speedlm.fit(theta,x_basis,  intercept = F )
@@ -137,11 +137,11 @@ get_projection <- function(sim_generator, d, k) {
 
 
 
-run_sims <- function(n, d, k, sim_generator, nsims) {
+run_sims <- function(n, d, k, sim_generator, nsims, nknots, nknots_tau) {
   data_big <- sim_generator(n= 500000,d,k)
 
   trueATE <- mean(data_big$ATE)
-  approxATE <- get_projection(sim_generator, d, k)
+  approxATE <- get_projection(sim_generator, d, k, nknots, nknots_tau)
   sim_list <- list()
   for(iter in 1:nsims) {
     print(iter)
@@ -154,10 +154,10 @@ run_sims <- function(n, d, k, sim_generator, nsims) {
       print(trueATE)
       print(approxATE)
       #fit_hal_g_params <- list(formula <- ~ h(.) + h(.,A), max_degree = 2, num_knots = c(20,20), smoothness_orders = 1)
-      basis_list_mu <- hal9001::enumerate_basis((X), max_degree = 2, num_knots = c(100,100, 1 ), smoothness_orders =0)
-      basis_list_tau <- hal9001::enumerate_basis((X), max_degree = 1, num_knots = c(50, 1), smoothness_orders = 1)
+      basis_list_mu <- hal9001::enumerate_basis((X), max_degree = 2, num_knots = nknots, smoothness_orders =0)
+      basis_list_tau <- hal9001::enumerate_basis((X), max_degree = 1, num_knots = nknots_tau, smoothness_orders = 1)
 
-      x_basis_mu <- cbind(1, as.matrix(make_design_matrix(X, basis_list_mu, 0.9)))
+      x_basis_mu <- cbind(1,  as.matrix(make_design_matrix(X, basis_list_mu, 0.9)))
       x_basis_tau <- cbind(1, as.matrix(make_design_matrix(X, basis_list_tau, 0.9)))
 
       # add intercept
@@ -167,7 +167,7 @@ run_sims <- function(n, d, k, sim_generator, nsims) {
       penalty.factor[1 + ncol(x_basis_mu) ] <-0
 
       # Compute lasso fit
-      lasso_fit <- glmnet::cv.glmnet(x_basis, Y, family = "gaussian", intercept = F, penalty.factor = penalty.factor, relax = F, gamma = 0, parallel = T, standardize = FALSE, lambda.min.ratio = 1e-4)
+      lasso_fit <- glmnet::cv.glmnet(x_basis, Y, family = "gaussian", intercept = F, penalty.factor = penalty.factor, relax = F, gamma = 0, parallel = T, standardize = FALSE, lambda.min.ratio = 1e-5)
       beta <- as.vector(coef(lasso_fit, s = "lambda.min"))[-1]
       keep_cols_1 <- which(abs(beta) > 1e-8)
 
@@ -200,10 +200,13 @@ run_sims <- function(n, d, k, sim_generator, nsims) {
       # Compute estimate of ATE
       est <- mean(theta_n_basis_row %*% beta)
       CI <- est + c(-1, 1) * abs(qnorm(1-0.975)) * se
-      cover <- as.numeric(approxATE >= CI[1] & approxATE <= CI[2])
+      cover_approx <- as.numeric(approxATE >= CI[1] & approxATE <= CI[2])
+      cover_true <- as.numeric(trueATE >= CI[1] & trueATE <= CI[2])
       sim_list$estimate <- c(sim_list$estimate , est)
       sim_list$CI <- c(sim_list$CI , CI)
-      sim_list$cover <- c(sim_list$cover , cover)
+      sim_list$cover_true <- c(sim_list$cover_true , cover_true)
+      sim_list$cover_approx <- c(sim_list$cover_approx , cover_approx)
+
       sim_list$se <- c(sim_list$se, se)
       sim_list$trueATE <- trueATE
       sim_list$approxATE <- approxATE
@@ -211,16 +214,19 @@ run_sims <- function(n, d, k, sim_generator, nsims) {
       print("AdaLSE")
       print(est)
       print(se)
-      print(mean(sim_list$cover ))
-      print(table(sim_list$cover ))
+      print("AdaLSE CI")
+      print(mean(sim_list$cover_true ))
+      print(mean(sim_list$cover_approx))
+      print(as.vector(table(sim_list$cover_true )))
+      print(as.vector(table(sim_list$cover_approx )))
 
       # DR Competitor
       print("Fitting mean A")
-      fit_A <- fit_hal(X, A,   family = "gaussian", smoothness_orders = 0, max_degree =2, num_knots=  c(100,100), fit_control = list(parallel = TRUE))
+      fit_A <- fit_hal(X, A,   family = "gaussian", smoothness_orders = 0, max_degree =2, num_knots=  nknots, fit_control = list(parallel = TRUE))
       EA <- predict(fit_A, new_data = X)
       print("Fitting variance A")
       if(!(all(A %in% c(0,1)))) {
-        fit_varA <- fit_hal(X, (A- EA)^2,  family = "gaussian", smoothness_orders = 0, max_degree =2, num_knots=  c(100,100), fit_control = list(parallel = TRUE))
+        fit_varA <- fit_hal(X, (A- EA)^2,  family = "gaussian", smoothness_orders = 0, max_degree =2, num_knots=  nknots, fit_control = list(parallel = TRUE))
         VarA <- pmax(predict(fit_varA, new_data = X), 1e-3)
       } else {
         VarA <- pmax(EA * (1- EA), 1e-3)
@@ -229,19 +235,27 @@ run_sims <- function(n, d, k, sim_generator, nsims) {
       DR <- mean(theta_n_A1 - theta_n_A0 + (A  - EA) / VarA * (Y - theta_n))
       DR_se <- sd(theta_n_A1 - theta_n_A0 + (A  - EA) / VarA * (Y - theta_n)) / sqrt(n)
       DR_CI <- DR + c(-1, 1) * abs(qnorm(1-0.975)) * DR_se
-      DR_cover <- as.numeric(approxATE >= DR_CI[1] & approxATE <= DR_CI[2])
+
+      DR_cover_approx <- as.numeric(approxATE >= DR_CI[1] & approxATE <= DR_CI[2])
+      DR_cover_true<- as.numeric(trueATE >= DR_CI[1] & trueATE <= DR_CI[2])
+
+      cover_true <- as.numeric(trueATE >= CI[1] & trueATE <= CI[2])
       sim_list$DR_estimate <- c(sim_list$DR_estimate,DR)
       sim_list$DR_se <- c(sim_list$DR_se, DR_se)
       sim_list$DR_CI <- c(sim_list$DR_CI,DR_CI)
-      sim_list$DR_cover <- c(sim_list$DR_cover, DR_cover)
+      sim_list$DR_cover_true <- c(sim_list$DR_cover_true, DR_cover_true)
+      sim_list$DR_cover_approx <- c(sim_list$DR_cover_approx, DR_cover_approx)
+
       sim_list$iter <- c(sim_list$iter, iter)
       sim_list$n <- c(sim_list$n, n)
       print("DR")
       print(DR)
       print(DR_se)
-
-      print(mean(sim_list$DR_cover ))
-      print(table(sim_list$DR_cover ))
+      print("DR CI")
+      print(mean(sim_list$DR_cover_true ))
+      print(mean(sim_list$DR_cover_approx))
+      print(as.vector(table(sim_list$DR_cover_true )))
+      print(as.vector(table(sim_list$DR_cover_approx )))
       print("se comparison")
       print(sd(sim_list$estimate))
       print(sd(sim_list$DR_estimate))
