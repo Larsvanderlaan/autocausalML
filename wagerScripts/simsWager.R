@@ -35,5 +35,5 @@ if(n== 500){
 
 results <- run_sims(n, d, k, sim_generator, nsims, nknots, nknots_tau)
 results <- as.data.frame(do.call(cbind, results))
-#fwrite(results,file = paste0("simsWager_" ,setting, "_", n, "d2k2.csv" ) )
+fwrite(results,file = paste0("simsWager_" ,setting, "_", n, "d2k2_new.csv" ) )
 
