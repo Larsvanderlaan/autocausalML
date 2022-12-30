@@ -199,7 +199,7 @@ out <- run_sims(const,n,nsims, fit_control = fit_control, formula_hal = ~ h(.) +
 
 #out_list[[as.character(const)]][[as.character(n)]] <<- out
 #out2 <- rbindlist(unlist(out_list, recursive = F))
-#fwrite(out, file = paste0("ComplexParametricHAL_", const,"_" ,n, ".csv"))
+fwrite(out, file = paste0("ComplexParametricHAL_", const,"_" ,n, ".csv"))
 #
 # outs <- lapply(c( 3,5,8), function(const) {
 #    lapply(rev (c(   500, 1000,  2500 ,5000 )) ,function(n) {
