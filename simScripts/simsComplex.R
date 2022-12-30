@@ -74,10 +74,10 @@ run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.)
       #fit_hal_g_params$fit_control$foldid <-  fit_hal_g_params$fit_control$foldid
 
       g_basis_gen <-make_g_basis_generator_HAL(X,A,Y,  fit_hal_g_params = fit_hal_g_params,  screen_basis = screen_basis, relaxed_fit = FALSE, weight_screen_by_alpha = weight_screen_by_alpha)
-
+    print("done")
       # weights <- g_basis_gen$weights
       #g_basis_gen <- g_basis_gen$g_basis
-      g_basis_gen_relaxed <-make_g_basis_generator_HAL(X,A,Y,  fit_hal_g_params = fit_hal_g_params_relaxed, screen_basis = screen_basis, relaxed_fit = TRUE, weight_screen_by_alpha = weight_screen_by_alpha)
+     # g_basis_gen_relaxed <-make_g_basis_generator_HAL(X,A,Y,  fit_hal_g_params = fit_hal_g_params_relaxed, screen_basis = screen_basis, relaxed_fit = TRUE, weight_screen_by_alpha = weight_screen_by_alpha)
       #g_basis_gen_relaxed <- g_basis_gen_relaxed$g_basis
       #print(quantile(weights))
       ATE <- datam_list$ATE
@@ -100,19 +100,19 @@ run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.)
 
 
       # RELAXED
-      causal_sieve <- causalsieve$new(X, A, Y, g_basis_gen_relaxed, nboots = nboots, weights = NULL)
-      causal_sieve$add_target_parameter(g(A=1,X=X) - g(A=0,X=X) ~ 1, name = "ATE")
-      causal_sieve$estimate()
-      name <- unlist(sapply(causal_sieve$estimates, `[[`, "name"))
-
-      estimates <- unlist(sapply(causal_sieve$estimates, `[[`, "estimate"))
-      CI_IF_df <- do.call(rbind, lapply(causal_sieve$estimates, `[[`, "CI"))
-      causal_sieve$confint(include_se_df_correction = FALSE)
-      CI_IF <- do.call(rbind, lapply(causal_sieve$estimates, `[[`, "CI"))
-      CI_boot <- do.call(rbind, lapply(causal_sieve$estimates, `[[`, "CI_boot"))
-      out2 <- cbind(t(as.data.table(c(iter, name))), t(as.data.table(as.numeric(c(estimates, CI_IF, CI_IF_df, CI_boot)))))
-      colnames(out2) <- c("iter", "name", "estimate_relaxed", "CI_left_relaxed", "CI_right_relaxed", "CI_df_left_relaxed", "CI_df_right_relaxed", "CI_boot_left_relaxed", "CI_boot_right_relaxed")
-      print("HERE")
+      # causal_sieve <- causalsieve$new(X, A, Y, g_basis_gen_relaxed, nboots = nboots, weights = NULL)
+      # causal_sieve$add_target_parameter(g(A=1,X=X) - g(A=0,X=X) ~ 1, name = "ATE")
+      # causal_sieve$estimate()
+      # name <- unlist(sapply(causal_sieve$estimates, `[[`, "name"))
+      #
+      # estimates <- unlist(sapply(causal_sieve$estimates, `[[`, "estimate"))
+      # CI_IF_df <- do.call(rbind, lapply(causal_sieve$estimates, `[[`, "CI"))
+      # causal_sieve$confint(include_se_df_correction = FALSE)
+      # CI_IF <- do.call(rbind, lapply(causal_sieve$estimates, `[[`, "CI"))
+      # CI_boot <- do.call(rbind, lapply(causal_sieve$estimates, `[[`, "CI_boot"))
+      # out2 <- cbind(t(as.data.table(c(iter, name))), t(as.data.table(as.numeric(c(estimates, CI_IF, CI_IF_df, CI_boot)))))
+      # colnames(out2) <- c("iter", "name", "estimate_relaxed", "CI_left_relaxed", "CI_right_relaxed", "CI_df_left_relaxed", "CI_df_right_relaxed", "CI_boot_left_relaxed", "CI_boot_right_relaxed")
+      # print("HERE")
 
       g1 <- causal_sieve$regression_fit$g_n1
       g0 <- causal_sieve$regression_fit$g_n0
@@ -131,10 +131,12 @@ run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.)
                        paste0(c("estimate", "CI_left", "CI_right"), "_aipw"),
                        paste0(c("estimate", "CI_left", "CI_right"), "_lm"))
       #
-      out <- cbind(out,out2[,-c(1,2), drop = F], t(as.data.table(comp)))
+     # out <- cbind(out,out2[,-c(1,2), drop = F], t(as.data.table(comp)))
+      out <- cbind(out, t(as.data.table(comp)))
+
       colnames(out) <- c(
         c("iter", "name", "estimate", "CI_left", "CI_right", "CI_df_left", "CI_df_right", "CI_boot_left", "CI_boot_right"),
-        c("estimate_relaxed", "CI_left_relaxed", "CI_right_relaxed", "CI_df_left_relaxed", "CI_df_right_relaxed", "CI_boot_left_relaxed", "CI_boot_right_relaxed"),
+      #  c("estimate_relaxed", "CI_left_relaxed", "CI_right_relaxed", "CI_df_left_relaxed", "CI_df_right_relaxed", "CI_boot_left_relaxed", "CI_boot_right_relaxed"),
         c(paste0(c("estimate", "CI_left", "CI_right"), "_tmle"),
           paste0(c("estimate", "CI_left", "CI_right"), "_aipw"),
           paste0(c("estimate", "CI_left", "CI_right"), "_lm"))
@@ -206,7 +208,7 @@ fwrite(out, file = paste0("ComplexParametricHAL_", const,"_" ,n, ".csv"))
 #     fit_control <- list()
 #     if(n >= 4000){
 #       nknots <- 100
-#       fit_control$lambda.min.ratio <- 1e-5
+      fit_control$lambda.min.ratio <- 1e-5
 #     } else if(n == 2500){
 #       nknots <- 75
 #       fit_control$lambda.min.ratio <- 1e-4
