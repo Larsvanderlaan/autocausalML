@@ -48,3 +48,6 @@ Loaded glmnet 4.1-4
 Loading required package: Rcpp
 hal9001 v0.4.4: The Scalable Highly Adaptive Lasso
 note: fit_hal defaults have changed. See ?fit_hal for details
+Warning message:
+In asMethod(object) :
+  sparse->dense coercion: allocating vector of size 3.6 GiB
