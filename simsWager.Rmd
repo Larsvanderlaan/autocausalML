@@ -9,6 +9,30 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
+
+```{r}
+library(data.table)
+library(ggplot2)
+type <- "log"
+ns <- c(500, 1000, 1500, 2000, 3000)
+out <- rbindlist(lapply(ns, function(n){
+  data <- fread(paste0("simScripts/simsWager_", type, "_", n, "d2k2_new.csv" ))
+  bias <- mean(data$estimate - data$trueATE)
+  se <- sd(data$estimate)
+  cover <- mean(data$cover_true)
+  bias_DR <- mean(data$DR_estimate - data$trueATE)
+  se_DR <- sd(data$DR_estimate)
+  cover_DR <- mean(data$DR_cover_true)
+  data.frame(type = type, n = n, method = c("AdaLSE", "DR"), "se" = c(se, se_DR), "bias" = c(bias, bias_DR), "coverage" = c(cover, cover_DR))
+}))
+
+
+ggplot(out, aes(x = n, y = coverage, color = method)) + geom_line()
+ggplot(out, aes(x = n, y = bias, color = method)) + geom_line()
+ggplot(out, aes(x = n, y = se, color = method)) + geom_line()
+
+```
+
 ```{r}
 doMC::registerDoMC(cores = 11)
 library(hal9001)
