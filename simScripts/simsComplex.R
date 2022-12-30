@@ -5,7 +5,7 @@ library(sl3)
 library(doMC)
 library(hal9001)
 
-doMC::registerDoMC(cores = 11)
+doMC::registerDoMC(cores = 5)
 
 run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.) + h(.,A), num_knots = c(1,1), smoothness_orders = 1, max_degree = 2,screen_basis = F, gen_fun, lrnr_pi = Lrnr_glmnet$new(), lrnr_g = Lrnr_glmnet$new(formula = ~ . + A * .),nboots = 500, relaxed_fit = TRUE, weight_screen_by_alpha = FALSE) {
   print(const)
@@ -165,7 +165,8 @@ run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.)
 
 
 ### COMPLEX
-
+const <- as.numeric(const)
+n <- as.numeric(n)
 nsims <- 1000
 library(sl3)
 fit_control <- list()
@@ -189,8 +190,7 @@ if(n == 5000){
   fit_control$lambda.min.ratio <- 1e-4
 }
 
-const <- as.numeric(const)
-n <- as.numeric(n)
+
 
 fit_control$parallel = TRUE
 
@@ -199,7 +199,7 @@ out <- run_sims(const,n,nsims, fit_control = fit_control, formula_hal = ~ h(.) +
 
 #out_list[[as.character(const)]][[as.character(n)]] <<- out
 #out2 <- rbindlist(unlist(out_list, recursive = F))
-fwrite(out, file = paste0("ComplexParametricHAL_", const,"_" ,n, ".csv"))
+#fwrite(out, file = paste0("ComplexParametricHAL_", const,"_" ,n, ".csv"))
 #
 # outs <- lapply(c( 3,5,8), function(const) {
 #    lapply(rev (c(   500, 1000,  2500 ,5000 )) ,function(n) {

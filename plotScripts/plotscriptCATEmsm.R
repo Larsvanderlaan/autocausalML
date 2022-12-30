@@ -5,6 +5,7 @@ name <- "SimsHALCATE"
 library(data.table)
 consts <- c(1,4,7)
 ns <- c(500, 1000, 2500, 5000)
+ns <- c(500 ,1000 ,2000 ,3000, 4000 ,5000)
 outs <- rbindlist(lapply(ns, function(n) {
   items <- lapply(consts, function(const) {
     fread(paste0("./simScripts/", name, "_",const,"_", n, ".csv"))
