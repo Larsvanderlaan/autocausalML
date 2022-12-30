@@ -104,14 +104,14 @@ sim_bin <- function(n, d, k) {
 
 
 
-get_projection <- function(sim_generator, d, k, nknots, nknots_tau) {
+get_projection <- function(sim_generator, d, k, nknots, nknots_tau, s) {
   data_big <- sim_generator(n= 25000,d,k)
   X <- as.matrix(data_big[,paste0("X", 1:d)])
   A <- data_big$W
   Y <-  data_big$Y
   theta <- data_big$theta
 
-  basis_list_mu <- hal9001::enumerate_basis((X), max_degree = 2, num_knots = nknots, smoothness_orders =0)
+  basis_list_mu <- hal9001::enumerate_basis((X), max_degree = 2, num_knots = nknots, smoothness_orders =s)
   basis_list_tau <- hal9001::enumerate_basis((X), max_degree = 1, num_knots = nknots_tau, smoothness_orders = 1)
   x_basis_mu <- cbind(1, as.matrix(make_design_matrix(X, basis_list_mu, 0.9)))
   x_basis_tau <- cbind(1, as.matrix(make_design_matrix(X, basis_list_tau, 0.9)))
@@ -137,11 +137,11 @@ get_projection <- function(sim_generator, d, k, nknots, nknots_tau) {
 
 
 
-run_sims <- function(n, d, k, sim_generator, nsims, nknots, nknots_tau) {
+run_sims <- function(n, d, k, sim_generator, nsims, nknots, nknots_tau, s) {
   data_big <- sim_generator(n= 500000,d,k)
 
   trueATE <- mean(data_big$ATE)
-  approxATE <- get_projection(sim_generator, d, k, nknots, nknots_tau)
+  approxATE <- get_projection(sim_generator, d, k, nknots, nknots_tau, s)
   sim_list <- list()
   for(iter in 1:nsims) {
     print(iter)
@@ -154,7 +154,7 @@ run_sims <- function(n, d, k, sim_generator, nsims, nknots, nknots_tau) {
       print(trueATE)
       print(approxATE)
       #fit_hal_g_params <- list(formula <- ~ h(.) + h(.,A), max_degree = 2, num_knots = c(20,20), smoothness_orders = 1)
-      basis_list_mu <- hal9001::enumerate_basis((X), max_degree = 2, num_knots = nknots, smoothness_orders =0)
+      basis_list_mu <- hal9001::enumerate_basis((X), max_degree = 2, num_knots = nknots, smoothness_orders =s)
       basis_list_tau <- hal9001::enumerate_basis((X), max_degree = 1, num_knots = nknots_tau, smoothness_orders = 1)
 
       x_basis_mu <- cbind(1,  as.matrix(make_design_matrix(X, basis_list_mu, 0.9)))

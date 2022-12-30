@@ -10,11 +10,12 @@ k <- 2
 settings <- list("beta" = sim_beta, "pois" = sim_pois, "norm" = sim_norm, "log" = sim_log, "bin" = sim_bin)
 sim_generator <- settings[[setting]]
 
+s <- 1
 n <- as.numeric(n)
 nsims <- as.numeric(nsims)
 doMC::registerDoMC(cores = 11)
 test_data <- sim_generator(n ,d, k)
-nknots <- log(n) * c(sqrt(n), sqrt(n))
+nknots <-  c(sqrt(n), sqrt(n))
 nknots_tau <- sqrt(n)
 # if(n== 500){
 #   nknots <- c(50,50)
@@ -33,7 +34,7 @@ nknots_tau <- sqrt(n)
 #   nknots_tau <- c(50)
 # }
 
-results <- run_sims(n, d, k, sim_generator, nsims, nknots, nknots_tau)
+results <- run_sims(n, d, k, sim_generator, nsims, nknots, nknots_tau, s)
 results <- as.data.frame(do.call(cbind, results))
-fwrite(results,file = paste0("simsWager_" ,setting, "_", n, "d2k2_rootn.csv" ) )
+fwrite(results,file = paste0("simsWager_" ,setting, "_", n, "d2k2_rootn_firstorder.csv" ) )
 
