@@ -6,7 +6,7 @@ library(doMC)
 library(hal9001)
 doMC::registerDoMC(cores = 5)
 
-run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.) + h(.,A), num_knots = c(1,1), smoothness_orders = 1, max_degree = 2,screen_basis = F, gen_fun, lrnr_pi = Lrnr_glmnet$new(), lrnr_g = Lrnr_glmnet$new(formula = ~ . + A * .),nboots = 500, relaxed_fit = TRUE, weight_screen_by_alpha = FALSE) {
+run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.) + h(.,A), num_knots = c(1,1), smoothness_orders = 1, max_degree = 2,screen_basis = F, gen_fun, lrnr_pi = Lrnr_glmnet$new(), lrnr_g = Lrnr_glmnet$new(formula = ~ . + A * .),nboots = 500, relaxed_fit = FALSE, weight_screen_by_alpha = FALSE) {
 
   fit_hal_g_params = list(   smoothness_orders = 1, max_degree =2, num_knots = c(1,1))
 
@@ -14,13 +14,8 @@ run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.)
 
 
 
-  datam_list <- gen_fun(const)(n)
-
-  X <- datam_list$X
-  A <- datam_list$A
-  Y <- datam_list$Y
   fit_control$parallel = TRUE
-  fit_control$foldid <- (sample(1:n,n, replace= FALSE) %% 10) + 1
+ # fit_control$foldid <- (sample(1:n,n, replace= FALSE) %% 10) + 1
   fit_hal_g_params$fit_control <- fit_control
   fit_hal_g_params$num_knots <- num_knots
   fit_hal_g_params$smoothness_orders <- smoothness_orders
@@ -29,10 +24,8 @@ run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.)
   fit_hal_g_params$fit_control$relax <- FALSE
   #fit_hal_g_params$fit_control$gamma <- 0
   #fit_hal_g_params$fit_control$weights <- weights
-  basis_formula <- formula_hal(fit_hal_g_params$formula, smoothness_orders = fit_hal_g_params$smoothness_orders, num_knots = fit_hal_g_params$num_knots, X = as.data.frame(cbind(X,A)) )$basis_list
-  fit_hal_g_params$basis_list <- basis_formula
-  fit_hal_g_params$X <- cbind(X,A)
-  fit_hal_g_params$Y <- Y
+ # basis_formula <- formula_hal(fit_hal_g_params$formula, smoothness_orders = fit_hal_g_params$smoothness_orders, num_knots = fit_hal_g_params$num_knots, X = as.data.frame(cbind(X,A)) )$basis_list
+ # fit_hal_g_params$basis_list <- basis_formula
   fit_hal_g_params$family = "gaussian"
   fit_hal_g_params$reduce_basis = 25/n
 
@@ -65,11 +58,7 @@ run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.)
       print(const)
       print(iter)
       print(weight_screen_by_alpha)
-      datam_list <- gen_fun(const)(n)
 
-      X <- datam_list$X
-      A <- datam_list$A
-      Y <- datam_list$Y
       # fit_control$parallel = TRUE
       #fit_hal_g_params$fit_control$foldid <- (sample(1:n,n, replace= FALSE) %% 10) + 1
       # fit_hal_g_params$fit_control <- fit_control
@@ -79,11 +68,11 @@ run_sims <- function(const, n, nsims, fit_control = list(), formula_hal = ~ h(.)
       # fit_hal_g_params$max_degree <- max_degree
       #fit_hal_g_params$fit_control$foldid <-  fit_hal_g_params$fit_control$foldid
 
-      g_basis_gen <-make_g_basis_generator_HAL(X,A,Y,  fit_hal_g_params = fit_hal_g_params,  screen_basis = screen_basis, relaxed_fit = FALSE, weight_screen_by_alpha = weight_screen_by_alpha)
+      g_basis_gen <-make_g_basis_generator_HAL(X,A,Y,  fit_hal_g_params = fit_hal_g_params,  screen_basis = screen_basis, relaxed_fit = FALSE, weight_screen_by_alpha = F)
 
       # weights <- g_basis_gen$weights
       #g_basis_gen <- g_basis_gen$g_basis
-      g_basis_gen_relaxed <-make_g_basis_generator_HAL(X,A,Y,  fit_hal_g_params = fit_hal_g_params_relaxed, screen_basis = screen_basis, relaxed_fit = TRUE, weight_screen_by_alpha = weight_screen_by_alpha)
+      g_basis_gen_relaxed <-make_g_basis_generator_HAL(X,A,Y,  fit_hal_g_params = fit_hal_g_params_relaxed, screen_basis = screen_basis, relaxed_fit = TRUE, weight_screen_by_alpha = F)
       #g_basis_gen_relaxed <- g_basis_gen_relaxed$g_basis
       #print(quantile(weights))
       ATE <- datam_list$ATE

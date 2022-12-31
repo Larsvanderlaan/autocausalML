@@ -6,9 +6,9 @@ library(data.table)
 consts <- c(3,5,8)
 ns <- c(500,1000,2500,5000)
 ns <- c(500 ,1000 ,2000 ,3000, 4000 ,5000)
-#name <- "LassoHighDim"
-#consts <- c(1,3,5)
-#ns <- c(250,500,750, 1000,1500, 2000)
+name <- "LassoHighDim"
+consts <- c(1,3,5)
+ns <- c(250,500,750, 1000,1500, 2000)
 outs <- rbindlist(lapply(ns, function(n) {
   items <- lapply(consts, function(const) {
    try({ fread(paste0("./simScripts/", name, "_",const,"_", n, ".csv"))
