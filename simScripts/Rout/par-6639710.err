@@ -48,3 +48,4 @@ Loaded glmnet 4.1-4
 Loading required package: Rcpp
 hal9001 v0.4.4: The Scalable Highly Adaptive Lasso
 note: fit_hal defaults have changed. See ?fit_hal for details
+slurmstepd-gizmok102: error: *** JOB 6639710 ON gizmok102 CANCELLED AT 2023-01-01T08:56:38 DUE TO TIME LIMIT ***

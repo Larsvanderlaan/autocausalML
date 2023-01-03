@@ -48,3 +48,4 @@ hal9001 v0.4.4: The Scalable Highly Adaptive Lasso
 note: fit_hal defaults have changed. See ?fit_hal for details
 Loading required package: Matrix
 Loaded glmnet 4.1-4
+slurmstepd-gizmok87: error: *** JOB 6572330 ON gizmok87 CANCELLED AT 2022-12-31T03:08:14 DUE TO TIME LIMIT ***
